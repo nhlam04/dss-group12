@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Charity Fund DSS{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-cash-stack"></i> Total Budget</h5>
+                <h2 id="totalBudget">$0</h2>
+                <small>Available funds</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-check-circle"></i> Allocated</h5>
+                <h2 id="allocatedBudget">$0</h2>
+                <small>Funds allocated</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-wallet"></i> Remaining</h5>
+                <h2 id="remainingBudget">$0</h2>
+                <small>Funds available</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-file-earmark"></i> Pending</h5>
+                <h2 id="pendingRequests">0</h2>
+                <small>Grant requests</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Charity Agents</h6>
+                <h3 id="totalAgents">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Requests</h6>
+                <h3 id="totalRequests">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Funded Programs</h6>
+                <h3 id="fundedRequests">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Allocations</h6>
+                <h3 id="totalAllocations">0</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fund Configuration -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Fund Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="fundConfigForm">
+                    <div class="mb-3">
+                        <label for="totalBudgetInput" class="form-label">Total Budget ($)</label>
+                        <input type="number" class="form-control" id="totalBudgetInput" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="minAllocationPct" class="form-label">Minimum Allocation Percentage</label>
+                        <input type="number" class="form-control" id="minAllocationPct" step="0.01" min="0" max="1" required>
+                        <small class="form-text text-muted">Enter value between 0 and 1 (e.g., 0.5 for 50%)</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Update Configuration
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/agents" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-people"></i> Manage Charity Agents
+                    </a>
+                    <a href="/requests" class="btn btn-outline-success btn-lg">
+                        <i class="bi bi-file-earmark-plus"></i> Add Grant Request
+                    </a>
+                    <a href="/allocate" class="btn btn-outline-warning btn-lg">
+                        <i class="bi bi-pie-chart"></i> Run Allocation Analysis
+                    </a>
+                    <a href="/history" class="btn btn-outline-info btn-lg">
+                        <i class="bi bi-clock-history"></i> View Allocation History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load dashboard statistics
+async function loadStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const stats = await response.json();
+        
+        // Update statistics
+        document.getElementById('totalBudget').textContent = `$${stats.total_budget.toLocaleString()}`;
+        document.getElementById('allocatedBudget').textContent = `$${stats.allocated_budget.toLocaleString()}`;
+        document.getElementById('remainingBudget').textContent = `$${stats.remaining_budget.toLocaleString()}`;
+        document.getElementById('pendingRequests').textContent = stats.pending_requests;
+        document.getElementById('totalAgents').textContent = stats.total_agents;
+        document.getElementById('totalRequests').textContent = stats.total_requests;
+        document.getElementById('fundedRequests').textContent = stats.funded_requests;
+        document.getElementById('totalAllocations').textContent = stats.total_allocations;
+        
+        // Update form
+        document.getElementById('totalBudgetInput').value = stats.total_budget;
+        document.getElementById('minAllocationPct').value = stats.min_allocation_percentage;
+    } catch (error) {
+        showError('Failed to load statistics: ' + error.message);
+    }
+}
+
+// Update fund configuration
+document.getElementById('fundConfigForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const totalBudget = parseFloat(document.getElementById('totalBudgetInput').value);
+    const minAllocationPct = parseFloat(document.getElementById('minAllocationPct').value);
+    
+    try {
+        const response = await fetch('/api/fund-config', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                total_budget: totalBudget,
+                min_allocation_percentage: minAllocationPct
+            })
+        });
+        
+        if (response.ok) {
+            showSuccess('Fund configuration updated successfully');
+            loadStats();
+        } else {
+            const error = await response.json();
+            showError(error.error);
+        }
+    } catch (error) {
+        showError('Failed to update configuration: ' + error.message);
+    }
+});
+
+// Load stats on page load
+loadStats();
+</script>
+{% endblock %}

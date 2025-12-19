@@ -37,14 +37,24 @@ class CharityAgent:
     """Represents an organization requesting funds"""
     agent_id: str
     name: str
-    success_rate: float  # Historical success rate (0-1)
     transparency_score: float  # Accountability score (0-1)
     total_programs_completed: int
     programs_succeeded: int
     
+    @property
+    def success_rate(self) -> float:
+        """Calculate success rate from completed programs"""
+        if self.total_programs_completed == 0:
+            return 0.0
+        return self.programs_succeeded / self.total_programs_completed
+    
     def __post_init__(self):
-        if not (0 <= self.success_rate <= 1):
-            raise ValueError("Success rate must be between 0 and 1")
+        if self.total_programs_completed < 0:
+            raise ValueError("Total programs completed must be non-negative")
+        if self.programs_succeeded < 0:
+            raise ValueError("Programs succeeded must be non-negative")
+        if self.programs_succeeded > self.total_programs_completed:
+            raise ValueError("Programs succeeded cannot exceed total programs")
         if not (0 <= self.transparency_score <= 1):
             raise ValueError("Transparency score must be between 0 and 1")
 
@@ -61,8 +71,9 @@ class GrantRequest:
     duration_months: int     # Time to complete program
     category: ProgramCategory
     urgency: UrgencyLevel
-    geographic_location: str
     sustainability_score: float  # Long-term impact score (0-1)
+    status: str = 'pending'  # 'pending' or 'completed'
+    succeeded: bool = False  # Only relevant if status is 'completed'
     
     # Calculated fields
     net_charity_amount: float = field(init=False)
@@ -81,6 +92,8 @@ class GrantRequest:
             raise ValueError("Duration must be positive")
         if not (0 <= self.sustainability_score <= 1):
             raise ValueError("Sustainability score must be between 0 and 1")
+        if self.status not in ['pending', 'completed']:
+            raise ValueError("Status must be 'pending' or 'completed'")
         
         self.net_charity_amount = self.amount_requested - self.overhead_cost
         self.overhead_ratio = self.overhead_cost / self.amount_requested

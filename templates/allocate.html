@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Allocate Funds - Charity Fund DSS{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-pie-chart"></i> Allocate Funds</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Allocation Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="allocationForm">
+                    <div class="mb-3">
+                        <label for="strategy" class="form-label">Allocation Strategy</label>
+                        <select class="form-select" id="strategy" required>
+                            <option value="greedy_partial">Greedy (Allow Partial)</option>
+                            <option value="greedy_full">Greedy (Full Funding Only)</option>
+                            <option value="proportional">Proportional</option>
+                            <option value="knapsack">Knapsack Optimization</option>
+                        </select>
+                        <small class="form-text text-muted">Choose allocation algorithm</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-info" onclick="previewAllocation()">
+                            <i class="bi bi-eye"></i> Preview Results
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Run Allocation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card" id="summaryCard" style="display:none;">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Allocation Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><th>Total Budget:</th><td id="sumBudget"></td></tr>
+                    <tr><th>Allocated:</th><td id="sumAllocated"></td></tr>
+                    <tr><th>Remaining:</th><td id="sumRemaining"></td></tr>
+                    <tr><th>Utilization:</th><td id="sumUtilization"></td></tr>
+                    <tr><th>Fully Funded:</th><td id="sumFull"></td></tr>
+                    <tr><th>Partially Funded:</th><td id="sumPartial"></td></tr>
+                    <tr><th>Rejected:</th><td id="sumRejected"></td></tr>
+                    <tr><th>People Benefitted:</th><td id="sumPeople"></td></tr>
+                    <tr><th>Avg Efficiency:</th><td id="sumEfficiency"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Allocation Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="loadingMessage" class="text-center">
+                    <p>Select a strategy and click "Preview Results" or "Run Allocation"</p>
+                </div>
+                <div id="resultsTable" style="display:none;">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Program Name</th>
+                                    <th>Agent</th>
+                                    <th>Requested</th>
+                                    <th>Allocated</th>
+                                    <th>%</th>
+                                    <th>Score</th>
+                                    <th>People</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="decisionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/allocate.js') }}"></script>
+{% endblock %}
