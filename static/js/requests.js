@@ -8,10 +8,27 @@ async function loadRequests(status = null) {
     try {
         const url = status ? `/api/requests?status=${status}` : '/api/requests';
         const response = await fetch(url);
+        
+        if (!response.ok) {
+            const error = await response.json();
+            showError(error.error || 'Failed to load requests');
+            return;
+        }
+        
         requests = await response.json();
+        
+        // Ensure requests is an array
+        if (!Array.isArray(requests)) {
+            console.error('Invalid response:', requests);
+            showError('Invalid response from server');
+            requests = [];
+            return;
+        }
+        
         displayRequests();
     } catch (error) {
         showError('Failed to load requests: ' + error.message);
+        requests = [];
     }
 }
 
@@ -65,26 +82,61 @@ function displayRequests() {
         let statusBadge = '';
         if (req.status === 'pending') {
             statusBadge = '<span class="badge bg-warning">Pending</span>';
+        } else if (req.status === 'funded') {
+            if (req.succeeded === 1) {
+                statusBadge = '<span class="badge bg-success">Funded</span> <span class="badge bg-success">Succeeded</span>';
+            } else if (req.succeeded === 0) {
+                statusBadge = '<span class="badge bg-success">Funded</span> <span class="badge bg-danger">Failed</span>';
+            } else {
+                statusBadge = '<span class="badge bg-success">Funded</span>';
+            }
+        } else if (req.status === 'rejected') {
+            if (req.succeeded === 1) {
+                statusBadge = '<span class="badge bg-danger">Rejected</span> <span class="badge bg-success">Succeeded</span>';
+            } else if (req.succeeded === 0) {
+                statusBadge = '<span class="badge bg-danger">Rejected</span> <span class="badge bg-danger">Failed</span>';
+            } else {
+                statusBadge = '<span class="badge bg-danger">Rejected</span>';
+            }
         } else if (req.status === 'completed') {
+            // Legacy support for old data
             statusBadge = req.succeeded ? 
-                '<span class="badge bg-success">Completed ✓</span>' :
-                '<span class="badge bg-danger">Completed ✗</span>';
+                '<span class="badge bg-success">Succeeded</span>' :
+                '<span class="badge bg-danger">Failed</span>';
         }
         
         let actionButtons = '';
-        if (req.status === 'pending') {
+        if (req.status === 'funded' || req.status === 'rejected') {
+            // Only show succeed/fail buttons if not yet marked (succeeded is null or undefined)
+            if (req.succeeded === null || req.succeeded === undefined) {
+                actionButtons = `
+                    <button class="btn btn-sm btn-success" onclick="markCompleted(${req.request_id}, true)" title="Mark as Succeeded">
+                        <i class="bi bi-check-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="markCompleted(${req.request_id}, false)" title="Mark as Failed">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteRequest(${req.request_id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+            } else {
+                // Already marked, only show delete
+                actionButtons = `
+                    <button class="btn btn-sm btn-danger" onclick="deleteRequest(${req.request_id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+            }
+        } else if (req.status === 'pending') {
+            // Pending requests can only be deleted
             actionButtons = `
-                <button class="btn btn-sm btn-success" onclick="markCompleted(${req.request_id}, true)" title="Mark as Succeeded">
-                    <i class="bi bi-check-circle"></i>
-                </button>
-                <button class="btn btn-sm btn-warning" onclick="markCompleted(${req.request_id}, false)" title="Mark as Failed">
-                    <i class="bi bi-x-circle"></i>
-                </button>
                 <button class="btn btn-sm btn-danger" onclick="deleteRequest(${req.request_id})">
                     <i class="bi bi-trash"></i>
                 </button>
             `;
         } else {
+            // For any other status (like 'completed'), only show delete
             actionButtons = `
                 <button class="btn btn-sm btn-danger" onclick="deleteRequest(${req.request_id})">
                     <i class="bi bi-trash"></i>
@@ -113,7 +165,9 @@ function displayRequests() {
 // Filter requests
 function filterRequests(status) {
     // Update button states
-    document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
     event.target.classList.add('active');
     
     loadRequests(status === 'all' ? null : status);
@@ -159,7 +213,6 @@ document.getElementById('addRequestForm').addEventListener('submit', async (e) =
 // Mark request as completed
 async function markCompleted(requestId, succeeded) {
     const status = succeeded ? 'succeeded' : 'failed';
-    if (!confirm(`Mark this request as ${status}?`)) return;
     
     try {
         const response = await fetch(`/api/requests/${requestId}/complete`, {

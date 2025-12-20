@@ -72,7 +72,7 @@ class GrantRequest:
     category: ProgramCategory
     urgency: UrgencyLevel
     sustainability_score: float  # Long-term impact score (0-1)
-    status: str = 'pending'  # 'pending' or 'completed'
+    status: str = 'pending'  # 'pending', 'funded', 'rejected', or 'completed'
     succeeded: bool = False  # Only relevant if status is 'completed'
     
     # Calculated fields
@@ -92,8 +92,8 @@ class GrantRequest:
             raise ValueError("Duration must be positive")
         if not (0 <= self.sustainability_score <= 1):
             raise ValueError("Sustainability score must be between 0 and 1")
-        if self.status not in ['pending', 'completed']:
-            raise ValueError("Status must be 'pending' or 'completed'")
+        if self.status not in ['pending', 'funded', 'rejected', 'completed']:
+            raise ValueError("Status must be 'pending', 'funded', 'rejected', or 'completed'")
         
         self.net_charity_amount = self.amount_requested - self.overhead_cost
         self.overhead_ratio = self.overhead_cost / self.amount_requested

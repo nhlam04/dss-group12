@@ -22,8 +22,10 @@ class Database:
     
     def get_connection(self):
         """Get database connection"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30.0)
         conn.row_factory = sqlite3.Row  # Access columns by name
+        # Enable WAL mode for better concurrency
+        conn.execute('PRAGMA journal_mode=WAL')
         return conn
     
     def init_database(self):
@@ -58,7 +60,7 @@ class Database:
                 urgency TEXT NOT NULL,
                 sustainability_score REAL NOT NULL,
                 status TEXT DEFAULT 'pending',
-                succeeded INTEGER DEFAULT 0,
+                succeeded INTEGER DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (agent_id) REFERENCES charity_agents(agent_id)
@@ -235,8 +237,8 @@ class Database:
                 INSERT INTO grant_requests 
                 (agent_id, program_name, amount_requested, overhead_cost,
                  people_benefitted, duration_months, category, urgency,
-                 sustainability_score, status, succeeded)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0)
+                 sustainability_score, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
             """, (agent_id, program_name, amount_requested, overhead_cost,
                   people_benefitted, duration_months, category, urgency,
                   sustainability_score))
@@ -334,10 +336,10 @@ class Database:
             
             agent_id = row['agent_id']
             
-            # Update the request status
+            # Update the request succeeded flag (keep current status)
             cursor.execute("""
                 UPDATE grant_requests 
-                SET status = 'completed', succeeded = ?, updated_at = CURRENT_TIMESTAMP
+                SET succeeded = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE request_id = ?
             """, (1 if succeeded else 0, request_id))
             
@@ -434,40 +436,51 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Save allocation summary
-        cursor.execute("""
-            INSERT INTO allocation_history 
-            (strategy_name, total_budget, total_allocated, remaining_budget,
-             num_fully_funded, num_partially_funded, num_rejected,
-             total_people_benefitted, average_efficiency)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (strategy_name, result.total_budget, result.total_allocated,
-              result.remaining_budget, result.num_fully_funded,
-              result.num_partially_funded, result.num_rejected,
-              result.total_people_benefitted, result.average_efficiency_ratio))
-        
-        allocation_id = cursor.lastrowid
-        
-        # Save individual decisions
-        for decision in result.decisions:
+        try:
+            # Save allocation summary
             cursor.execute("""
-                INSERT INTO allocation_decisions
-                (allocation_id, request_id, amount_allocated, allocation_percentage,
-                 priority_score, rank, rationale)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (allocation_id, decision.request.request_id,
-                  decision.amount_allocated, decision.allocation_percentage,
-                  decision.priority_score, decision.rank, decision.rationale))
+                INSERT INTO allocation_history 
+                (strategy_name, total_budget, total_allocated, remaining_budget,
+                 num_fully_funded, num_partially_funded, num_rejected,
+                 total_people_benefitted, average_efficiency)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (strategy_name, result.total_budget, result.total_allocated,
+                  result.remaining_budget, result.num_fully_funded,
+                  result.num_partially_funded, result.num_rejected,
+                  result.total_people_benefitted, result.average_efficiency_ratio))
             
-            # Update request status based on decision
-            if decision.is_fully_funded() or decision.is_partially_funded():
-                self.update_request_status(decision.request.request_id, 'funded')
-            else:
-                self.update_request_status(decision.request.request_id, 'rejected')
-        
-        conn.commit()
-        conn.close()
-        return allocation_id
+            allocation_id = cursor.lastrowid
+            
+            # Save individual decisions
+            for decision in result.decisions:
+                cursor.execute("""
+                    INSERT INTO allocation_decisions
+                    (allocation_id, request_id, amount_allocated, allocation_percentage,
+                     priority_score, rank, rationale)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (allocation_id, decision.request.request_id,
+                      decision.amount_allocated, decision.allocation_percentage,
+                      decision.priority_score, decision.rank, decision.rationale))
+                
+                # Update request status based on decision (use same connection)
+                if decision.is_fully_funded() or decision.is_partially_funded():
+                    status = 'funded'
+                else:
+                    status = 'rejected'
+                
+                cursor.execute("""
+                    UPDATE grant_requests 
+                    SET status = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE request_id = ?
+                """, (status, decision.request.request_id))
+            
+            conn.commit()
+            return allocation_id
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
     
     def get_allocation_history(self, limit: int = 10) -> List[Dict]:
         """Get recent allocation history"""
@@ -497,6 +510,65 @@ class Database:
                 'allocation_date': row['allocation_date']
             })
         return history
+    
+    def get_allocation_details(self, allocation_id: int) -> Optional[Dict]:
+        """Get detailed allocation information including all decisions"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Get allocation summary
+        cursor.execute("""
+            SELECT * FROM allocation_history 
+            WHERE allocation_id = ?
+        """, (allocation_id,))
+        allocation_row = cursor.fetchone()
+        
+        if not allocation_row:
+            conn.close()
+            return None
+        
+        # Get allocation decisions
+        cursor.execute("""
+            SELECT ad.*, gr.program_name, gr.agent_id, gr.amount_requested, gr.people_benefitted
+            FROM allocation_decisions ad
+            JOIN grant_requests gr ON ad.request_id = gr.request_id
+            WHERE ad.allocation_id = ?
+            ORDER BY ad.rank
+        """, (allocation_id,))
+        decision_rows = cursor.fetchall()
+        
+        # Get agent names for decisions
+        decisions = []
+        for row in decision_rows:
+            agent = self.get_agent(row['agent_id'])
+            decisions.append({
+                'rank': row['rank'],
+                'program_name': row['program_name'],
+                'agent_name': agent.name if agent else 'Unknown',
+                'amount_requested': row['amount_requested'],
+                'amount_allocated': row['amount_allocated'],
+                'allocation_percentage': row['allocation_percentage'],
+                'priority_score': row['priority_score'],
+                'people_benefitted': int(row['people_benefitted'] * row['allocation_percentage']),
+                'rationale': row['rationale']
+            })
+        
+        conn.close()
+        
+        return {
+            'allocation_id': allocation_row['allocation_id'],
+            'strategy_name': allocation_row['strategy_name'],
+            'total_budget': allocation_row['total_budget'],
+            'total_allocated': allocation_row['total_allocated'],
+            'remaining_budget': allocation_row['remaining_budget'],
+            'num_fully_funded': allocation_row['num_fully_funded'],
+            'num_partially_funded': allocation_row['num_partially_funded'],
+            'num_rejected': allocation_row['num_rejected'],
+            'total_people_benefitted': allocation_row['total_people_benefitted'],
+            'average_efficiency': allocation_row['average_efficiency'],
+            'allocation_date': allocation_row['allocation_date'],
+            'decisions': decisions
+        }
     
     # === CRITERIA WEIGHTS ===
     

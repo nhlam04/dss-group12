@@ -6,6 +6,11 @@ let currentResult = null;
 async function previewAllocation() {
     const strategy = document.getElementById('strategy').value;
     
+    // Show loading spinner
+    document.getElementById('loadingMessage').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('resultsTable').style.display = 'none';
+    
     try {
         const response = await fetch('/api/allocate/preview', {
             method: 'POST',
@@ -19,9 +24,13 @@ async function previewAllocation() {
         } else {
             const error = await response.json();
             showError(error.error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'block';
         }
     } catch (error) {
         showError('Failed to preview allocation: ' + error.message);
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('loadingMessage').style.display = 'block';
     }
 }
 
@@ -32,6 +41,11 @@ document.getElementById('allocationForm').addEventListener('submit', async (e) =
     if (!confirm('Are you sure you want to run this allocation? This will update the database.')) return;
     
     const strategy = document.getElementById('strategy').value;
+    
+    // Show loading spinner
+    document.getElementById('loadingMessage').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('resultsTable').style.display = 'none';
     
     try {
         const response = await fetch('/api/allocate', {
@@ -47,9 +61,13 @@ document.getElementById('allocationForm').addEventListener('submit', async (e) =
         } else {
             const error = await response.json();
             showError(error.error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'block';
         }
     } catch (error) {
         showError('Failed to run allocation: ' + error.message);
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('loadingMessage').style.display = 'block';
     }
 });
 
@@ -69,6 +87,7 @@ function displayResults(result) {
     
     // Show decisions table
     document.getElementById('loadingMessage').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'none';
     document.getElementById('resultsTable').style.display = 'block';
     
     const tbody = document.getElementById('decisionsTable');

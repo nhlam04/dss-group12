@@ -90,8 +90,9 @@
             <div class="card-body">
                 <form id="fundConfigForm">
                     <div class="mb-3">
-                        <label for="totalBudgetInput" class="form-label">Total Budget ($)</label>
-                        <input type="number" class="form-control" id="totalBudgetInput" step="0.01" min="0" required>
+                        <label for="addFundsInput" class="form-label">Add Funds ($)</label>
+                        <input type="number" class="form-control" id="addFundsInput" step="0.01" min="0" required>
+                        <small class="form-text text-muted">Enter amount to add to existing budget</small>
                     </div>
                     <div class="mb-3">
                         <label for="minAllocationPct" class="form-label">Minimum Allocation Percentage</label>
@@ -99,7 +100,7 @@
                         <small class="form-text text-muted">Enter value between 0 and 1 (e.g., 0.5 for 50%)</small>
                     </div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Update Configuration
+                        <i class="bi bi-plus-circle"></i> Add Funds
                     </button>
                 </form>
             </div>
@@ -150,8 +151,7 @@ async function loadStats() {
         document.getElementById('fundedRequests').textContent = stats.funded_requests;
         document.getElementById('totalAllocations').textContent = stats.total_allocations;
         
-        // Update form
-        document.getElementById('totalBudgetInput').value = stats.total_budget;
+        // Update form - only update min allocation percentage
         document.getElementById('minAllocationPct').value = stats.min_allocation_percentage;
     } catch (error) {
         showError('Failed to load statistics: ' + error.message);
@@ -162,21 +162,32 @@ async function loadStats() {
 document.getElementById('fundConfigForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const totalBudget = parseFloat(document.getElementById('totalBudgetInput').value);
+    const addFunds = parseFloat(document.getElementById('addFundsInput').value);
     const minAllocationPct = parseFloat(document.getElementById('minAllocationPct').value);
     
+    if (addFunds <= 0) {
+        showError('Amount to add must be greater than zero');
+        return;
+    }
+    
     try {
+        // Get current budget first
+        const statsResponse = await fetch('/api/stats');
+        const stats = await statsResponse.json();
+        const newTotalBudget = stats.total_budget + addFunds;
+        
         const response = await fetch('/api/fund-config', {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                total_budget: totalBudget,
+                total_budget: newTotalBudget,
                 min_allocation_percentage: minAllocationPct
             })
         });
         
         if (response.ok) {
-            showSuccess('Fund configuration updated successfully');
+            showSuccess(`Successfully added $${addFunds.toLocaleString()} to fund`);
+            document.getElementById('addFundsInput').value = '';
             loadStats();
         } else {
             const error = await response.json();

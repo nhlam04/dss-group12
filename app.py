@@ -426,6 +426,18 @@ def get_history():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/history/<int:allocation_id>', methods=['GET'])
+def get_allocation_details(allocation_id):
+    """Get detailed allocation information"""
+    try:
+        details = db.get_allocation_details(allocation_id)
+        if details:
+            return jsonify(details)
+        else:
+            return jsonify({'error': 'Allocation not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # --- Criteria Weights ---
 @app.route('/api/criteria-weights', methods=['GET'])
 def get_weights():
