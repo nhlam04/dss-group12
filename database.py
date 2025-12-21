@@ -246,7 +246,7 @@ class Database:
                     urgency=UrgencyLevel[row['urgency']],
                     sustainability_score=row['sustainability_score'],
                     status=row['status'],
-                    succeeded=bool(row['succeeded'])
+                    succeeded=None if row['succeeded'] is None else bool(row['succeeded'])
                 )
         return None
     
@@ -278,7 +278,7 @@ class Database:
                     urgency=UrgencyLevel[row['urgency']],
                     sustainability_score=row['sustainability_score'],
                     status=row['status'],
-                    succeeded=bool(row['succeeded'])
+                    succeeded=None if row['succeeded'] is None else bool(row['succeeded'])
                 ))
         return requests
     

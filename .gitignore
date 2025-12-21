@@ -1,1 +1,10 @@
 old/
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+*.db
+!charity_fund.db  # Only keep if you want to share the sample database, otherwise ignore it too
+.vscode/
+.idea/

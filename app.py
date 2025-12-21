@@ -161,7 +161,7 @@ def get_requests():
             'urgency': r.urgency.name,
             'sustainability_score': r.sustainability_score,
             'status': r.status,
-            'succeeded': bool(r.succeeded),
+            'succeeded': r.succeeded, # None, True, or False
             'efficiency_ratio': r.efficiency_ratio(),
             'cost_per_person': r.cost_per_person()
         } for r in requests_list])
