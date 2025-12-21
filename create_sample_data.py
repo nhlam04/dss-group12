@@ -1,12 +1,8 @@
-"""
-Create Sample Database with Test Data
-Run this script to populate the database with sample charity agents and grant requests
-"""
+
 
 from database import Database
 from charity_decision_system import ProgramCategory, UrgencyLevel
 
-# Initialize database
 db = Database()
 
 print("Creating sample data...")

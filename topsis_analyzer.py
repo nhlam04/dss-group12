@@ -1,8 +1,3 @@
-"""
-TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution)
-Multi-criteria decision analysis for ranking grant requests
-"""
-
 import numpy as np
 from typing import List, Dict, Tuple
 from charity_decision_system import GrantRequest, UrgencyLevel
@@ -16,7 +11,7 @@ class TOPSISAnalyzer:
     def __init__(self, weights: Dict[str, float] = None):
         """
         Initialize TOPSIS analyzer with criteria weights
-        
+
         Args:
             weights: Dictionary of criterion name to weight (must sum to 1)
         """
@@ -176,11 +171,11 @@ class TOPSISAnalyzer:
         """
         Generate an explanation for a request's ranking
         """
-        explanation = f"Priority Score: {score:.3f}\n"
-        explanation += f"- Benefits {request.people_benefitted:,} people\n"
-        explanation += f"- Efficiency: {request.efficiency_ratio():.1%} (${request.net_cost_per_person():.2f}/person)\n"
-        explanation += f"- Agent success rate: {request.agent.success_rate:.1%}\n"
-        explanation += f"- Urgency: {request.urgency.name}\n"
-        explanation += f"- Sustainability: {request.sustainability_score:.1%}\n"
+        explanation = f"Điểm xếp hạng: {score:.3f}\n"
+        explanation += f"- {request.people_benefitted:,} người hưởng lợi\n"
+        explanation += f"- Hiệu qủa {request.efficiency_ratio():.1%} (${request.net_cost_per_person():.2f}/person)\n"
+        explanation += f"- Tỷ lệ thành công: {request.agent.success_rate:.1%}\n"
+        explanation += f"- Độ cấp bách: {request.urgency.name}\n"
+        explanation += f"- Độ bền vững: {request.sustainability_score:.1%}\n"
         
         return explanation

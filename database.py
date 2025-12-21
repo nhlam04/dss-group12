@@ -1,7 +1,3 @@
-"""
-Database Models and Initialization
-SQLite database for storing charity fund data
-"""
 
 import sqlite3
 import json
@@ -14,26 +10,22 @@ from charity_decision_system import (
 
 
 class Database:
-    """Database manager for charity fund system"""
+    """Database"""
     
     def __init__(self, db_path: str = "charity_fund.db"):
         self.db_path = db_path
         self.init_database()
     
     def get_connection(self):
-        """Get database connection"""
         conn = sqlite3.connect(self.db_path, timeout=30.0)
-        conn.row_factory = sqlite3.Row  # Access columns by name
-        # Enable WAL mode for better concurrency
+        conn.row_factory = sqlite3.Row
         conn.execute('PRAGMA journal_mode=WAL')
         return conn
     
     def init_database(self):
-        """Initialize database tables"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
-        # Charity Agents table
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS charity_agents (
                 agent_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,8 +37,7 @@ class Database:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
-        # Grant Requests table
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS grant_requests (
                 request_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,8 +57,7 @@ class Database:
                 FOREIGN KEY (agent_id) REFERENCES charity_agents(agent_id)
             )
         """)
-        
-        # Fund Configuration table
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS fund_config (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -77,8 +67,7 @@ class Database:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
-        # Allocation History table
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS allocation_history (
                 allocation_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,8 +83,7 @@ class Database:
                 allocation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
-        # Allocation Decisions table
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS allocation_decisions (
                 decision_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,8 +98,7 @@ class Database:
                 FOREIGN KEY (request_id) REFERENCES grant_requests(request_id)
             )
         """)
-        
-        # TOPSIS Criteria Weights table
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS criteria_weights (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -125,26 +112,22 @@ class Database:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
-        # Insert default fund config if not exists
+
         cursor.execute("""
             INSERT OR IGNORE INTO fund_config (id, total_budget, allocated_budget)
             VALUES (1, 0, 0)
         """)
-        
-        # Insert default criteria weights if not exists
+
         cursor.execute("""
             INSERT OR IGNORE INTO criteria_weights (id) VALUES (1)
         """)
         
         conn.commit()
         conn.close()
-    
-    # === CHARITY AGENTS ===
+
     
     def add_agent(self, name: str, transparency_score: float, 
                   total_programs_completed: int = 0, programs_succeeded: int = 0) -> int:
-        """Add a charity agent to database. Returns the auto-generated agent_id."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -160,7 +143,6 @@ class Database:
             conn.close()
     
     def get_agent(self, agent_id: int) -> Optional[CharityAgent]:
-        """Get a charity agent by ID"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM charity_agents WHERE agent_id = ?", (agent_id,))
@@ -178,7 +160,6 @@ class Database:
         return None
     
     def get_all_agents(self) -> List[CharityAgent]:
-        """Get all charity agents"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM charity_agents ORDER BY name")
@@ -198,7 +179,6 @@ class Database:
     
     def update_agent(self, agent_id: int, name: str, transparency_score: float,
                      total_programs_completed: int, programs_succeeded: int) -> bool:
-        """Update a charity agent"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -215,7 +195,6 @@ class Database:
         return success
     
     def delete_agent(self, agent_id: int) -> bool:
-        """Delete a charity agent"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM charity_agents WHERE agent_id = ?", (agent_id,))
@@ -224,12 +203,9 @@ class Database:
         conn.close()
         return success
     
-    # === GRANT REQUESTS ===
-    
     def add_request(self, agent_id: int, program_name: str, amount_requested: float,
                     overhead_cost: float, people_benefitted: int, duration_months: int,
                     category: str, urgency: str, sustainability_score: float) -> int:
-        """Add a grant request to database. Returns the auto-generated request_id."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -249,7 +225,6 @@ class Database:
             conn.close()
     
     def get_request(self, request_id: int) -> Optional[GrantRequest]:
-        """Get a grant request by ID"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM grant_requests WHERE request_id = ?", (request_id,))
@@ -276,7 +251,6 @@ class Database:
         return None
     
     def get_all_requests(self, status: Optional[str] = None) -> List[GrantRequest]:
-        """Get all grant requests, optionally filtered by status"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
@@ -309,7 +283,6 @@ class Database:
         return requests
     
     def update_request_status(self, request_id: int, status: str) -> bool:
-        """Update request status"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -323,27 +296,23 @@ class Database:
         return success
     
     def mark_request_completed(self, request_id: int, succeeded: bool) -> bool:
-        """Mark a request as completed and update the agent's statistics"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
         try:
-            # Get the request to find the agent_id
             cursor.execute("SELECT agent_id FROM grant_requests WHERE request_id = ?", (request_id,))
             row = cursor.fetchone()
             if not row:
                 return False
             
             agent_id = row['agent_id']
-            
-            # Update the request succeeded flag (keep current status)
+
             cursor.execute("""
                 UPDATE grant_requests 
                 SET succeeded = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE request_id = ?
             """, (1 if succeeded else 0, request_id))
-            
-            # Update agent statistics
+
             if succeeded:
                 cursor.execute("""
                     UPDATE charity_agents
@@ -369,7 +338,6 @@ class Database:
             conn.close()
     
     def delete_request(self, request_id: int) -> bool:
-        """Delete a grant request"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM grant_requests WHERE request_id = ?", (request_id,))
@@ -377,11 +345,9 @@ class Database:
         success = cursor.rowcount > 0
         conn.close()
         return success
-    
-    # === FUND CONFIGURATION ===
+
     
     def get_fund_config(self) -> Dict:
-        """Get current fund configuration"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM fund_config WHERE id = 1")
@@ -400,7 +366,6 @@ class Database:
     def update_fund_config(self, total_budget: float = None, 
                           allocated_budget: float = None,
                           min_allocation_percentage: float = None) -> bool:
-        """Update fund configuration"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
@@ -429,15 +394,11 @@ class Database:
         conn.close()
         return success
     
-    # === ALLOCATION HISTORY ===
-    
     def save_allocation(self, result: FundAllocationResult, strategy_name: str) -> int:
-        """Save allocation result to database"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
         try:
-            # Save allocation summary
             cursor.execute("""
                 INSERT INTO allocation_history 
                 (strategy_name, total_budget, total_allocated, remaining_budget,
@@ -450,8 +411,7 @@ class Database:
                   result.total_people_benefitted, result.average_efficiency_ratio))
             
             allocation_id = cursor.lastrowid
-            
-            # Save individual decisions
+
             for decision in result.decisions:
                 cursor.execute("""
                     INSERT INTO allocation_decisions
@@ -461,8 +421,7 @@ class Database:
                 """, (allocation_id, decision.request.request_id,
                       decision.amount_allocated, decision.allocation_percentage,
                       decision.priority_score, decision.rank, decision.rationale))
-                
-                # Update request status based on decision (use same connection)
+
                 if decision.is_fully_funded() or decision.is_partially_funded():
                     status = 'funded'
                 else:
@@ -483,7 +442,6 @@ class Database:
             conn.close()
     
     def get_allocation_history(self, limit: int = 10) -> List[Dict]:
-        """Get recent allocation history"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -512,11 +470,9 @@ class Database:
         return history
     
     def get_allocation_details(self, allocation_id: int) -> Optional[Dict]:
-        """Get detailed allocation information including all decisions"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
-        # Get allocation summary
+
         cursor.execute("""
             SELECT * FROM allocation_history 
             WHERE allocation_id = ?
@@ -526,8 +482,7 @@ class Database:
         if not allocation_row:
             conn.close()
             return None
-        
-        # Get allocation decisions
+
         cursor.execute("""
             SELECT ad.*, gr.program_name, gr.agent_id, gr.amount_requested, gr.people_benefitted
             FROM allocation_decisions ad
@@ -536,8 +491,7 @@ class Database:
             ORDER BY ad.rank
         """, (allocation_id,))
         decision_rows = cursor.fetchall()
-        
-        # Get agent names for decisions
+
         decisions = []
         for row in decision_rows:
             agent = self.get_agent(row['agent_id'])
@@ -569,11 +523,9 @@ class Database:
             'allocation_date': allocation_row['allocation_date'],
             'decisions': decisions
         }
-    
-    # === CRITERIA WEIGHTS ===
+
     
     def get_criteria_weights(self) -> Dict[str, float]:
-        """Get TOPSIS criteria weights"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM criteria_weights WHERE id = 1")
@@ -593,7 +545,6 @@ class Database:
         return {}
     
     def update_criteria_weights(self, weights: Dict[str, float]) -> bool:
-        """Update TOPSIS criteria weights"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -615,7 +566,6 @@ class Database:
         return success
     
     def get_stats(self) -> Dict:
-        """Get database statistics"""
         conn = self.get_connection()
         cursor = conn.cursor()
         

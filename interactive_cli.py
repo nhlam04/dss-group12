@@ -1,7 +1,3 @@
-"""
-Interactive Command-Line Interface for Charity Fund Decision Support
-Allows users to input their own data and run allocation strategies
-"""
 
 import json
 from typing import List
@@ -14,35 +10,32 @@ from topsis_analyzer import TOPSISAnalyzer
 
 
 def print_header():
-    """Print application header"""
     print("\n" + "=" * 80)
-    print(" " * 20 + "CHARITY FUND DECISION SUPPORT SYSTEM")
+    print(" " * 20 + "Hệ thống trợ giúp quyết định quỹ từ thiện")
     print("=" * 80)
 
 
 def print_menu():
-    """Display main menu"""
     print("\nMAIN MENU:")
-    print("1. Load sample data")
-    print("2. Input custom grant requests")
-    print("3. Run allocation analysis")
-    print("4. Compare allocation strategies")
-    print("5. Export results to JSON")
-    print("6. View current requests")
+    print("1. dữ liệu mẫu")
+    print("2. Nhập só tiền yêu cầu từ thiện")
+    print("3. Phân tích phân bổ")
+    print("4. So sánh phương án")
+    print("5. Xuất dưới dạng JSON")
+    print("6. Yêu cầu hiện tại")
     print("7. Exit")
     print("-" * 80)
 
 
 def get_urgency_level():
-    """Interactive urgency level selection"""
-    print("\nUrgency Levels:")
-    print("1. CRITICAL (Immediate need)")
-    print("2. HIGH (Urgent but not immediate)")
-    print("3. MEDIUM (Standard timeline)")
-    print("4. LOW (Can be delayed)")
-    print("5. FLEXIBLE (No time constraints)")
+    print("\nMỨc độ cấp bách:")
+    print("1. Nghiêm trọng (Cần ngay lập tức)")
+    print("2. Cao (Cấp bch nhưng chưa cần ngay)")
+    print("3. Trung bình (theo thời lượng tiêu chuẩn)")
+    print("4. Thấp (Có thể trì hoãn)")
+    print("5. Linh hoạt (Không giới hạn thời gian)")
     
-    choice = input("Select urgency level (1-5): ").strip()
+    choice = input("Chọn mức độ cấo bách (1-5): ").strip()
     urgency_map = {
         '1': UrgencyLevel.CRITICAL,
         '2': UrgencyLevel.HIGH,
@@ -54,17 +47,16 @@ def get_urgency_level():
 
 
 def get_program_category():
-    """Interactive program category selection"""
-    print("\nProgram Categories:")
-    print("1. Healthcare")
-    print("2. Education")
-    print("3. Food Security")
-    print("4. Disaster Relief")
-    print("5. Housing")
-    print("6. Environment")
-    print("7. Other")
+    print("\nLoại chương trình từ thiện:")
+    print("1. Y tế")
+    print("2. Giáo dục")
+    print("3. Thực phẩm")
+    print("4. Hỗ trợ thiên tai")
+    print("5. Nhà ở")
+    print("6. Môi trường")
+    print("7. Khác")
     
-    choice = input("Select category (1-7): ").strip()
+    choice = input("Chọn (1-7): ").strip()
     category_map = {
         '1': ProgramCategory.HEALTHCARE,
         '2': ProgramCategory.EDUCATION,
@@ -78,49 +70,48 @@ def get_program_category():
 
 
 def input_agent():
-    """Interactive agent input"""
     print("\n" + "-" * 80)
-    print("CHARITY AGENT INFORMATION")
+    print("Thông tin tổ chức từ thiện")
     print("-" * 80)
     
-    agent_id = input("Agent ID: ").strip()
-    name = input("Organization Name: ").strip()
+    agent_id = input("ID: ").strip()
+    name = input("Tên tổ chức từ thiện: ").strip()
     
     while True:
         try:
-            success_rate = float(input("Historical Success Rate (0-1, e.g., 0.85): ").strip())
+            success_rate = float(input("Lịch sử mức độ hoàn thành (0-1, vd., 0.85): ").strip())
             if 0 <= success_rate <= 1:
                 break
-            print("Error: Must be between 0 and 1")
+            print("Error: Giá trị phải giữa 0 và 1")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            transparency = float(input("Transparency Score (0-1, e.g., 0.90): ").strip())
+            transparency = float(input("Tính minh bạch (0-1, e.g., 0.90): ").strip())
             if 0 <= transparency <= 1:
                 break
-            print("Error: Must be between 0 and 1")
+            print("Error: Giá trị phải giữa 0 và 1")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            total_programs = int(input("Total Programs Completed: ").strip())
+            total_programs = int(input("Số lượng chưng trình đã hoàn thành: ").strip())
             if total_programs >= 0:
                 break
-            print("Error: Must be non-negative")
+            print("Error: Phải là số dương")
         except ValueError:
-            print("Error: Please enter a valid integer")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            succeeded = int(input("Programs Succeeded: ").strip())
+            succeeded = int(input("Số lượng chương trình thành công: ").strip())
             if 0 <= succeeded <= total_programs:
                 break
-            print(f"Error: Must be between 0 and {total_programs}")
+            print("Error: Giá trị phải giữa 0 và {total_programs}")
         except ValueError:
-            print("Error: Please enter a valid integer")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     return CharityAgent(
         agent_id=agent_id,
@@ -133,63 +124,62 @@ def input_agent():
 
 
 def input_grant_request(agent: CharityAgent):
-    """Interactive grant request input"""
     print("\n" + "-" * 80)
-    print("GRANT REQUEST INFORMATION")
+    print("Yêu cầu từ thiện")
     print("-" * 80)
     
-    request_id = input("Request ID: ").strip()
-    program_name = input("Program Name: ").strip()
+    request_id = input("ID: ").strip()
+    program_name = input("Tên chương trình từ thiện: ").strip()
     
     while True:
         try:
-            amount = float(input("Amount Requested ($): ").strip())
+            amount = float(input("Khoảng tiền yêu cầu từ thiện ($): ").strip())
             if amount > 0:
                 break
-            print("Error: Must be positive")
+            print("Error: Phải là số dương")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            overhead = float(input("Overhead Cost ($): ").strip())
+            overhead = float(input("Chi phí ($): ").strip())
             if 0 <= overhead < amount:
                 break
-            print(f"Error: Must be between 0 and {amount}")
+            print("Error: Giá trị phải giữa 0 và {amount}")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            people = int(input("People Benefitted: ").strip())
+            people = int(input("Số lượng người hưởng lợi: ").strip())
             if people > 0:
                 break
-            print("Error: Must be positive")
+            print("Error: Phải là số dương")
         except ValueError:
-            print("Error: Please enter a valid integer")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            duration = int(input("Duration (months): ").strip())
+            duration = int(input("DThời lượng (tháng): ").strip())
             if duration > 0:
                 break
-            print("Error: Must be positive")
+            print("Error: Phải là số dương")
         except ValueError:
-            print("Error: Please enter a valid integer")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     category = get_program_category()
     urgency = get_urgency_level()
     
-    location = input("Geographic Location: ").strip()
+    location = input("Vị trí: ").strip()
     
     while True:
         try:
-            sustainability = float(input("Sustainability Score (0-1, e.g., 0.75): ").strip())
+            sustainability = float(input("Tính bền vững (0-1, e.g., 0.75): ").strip())
             if 0 <= sustainability <= 1:
                 break
-            print("Error: Must be between 0 and 1")
+            print("Error: Giá trị phải giữa 0 và 1")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     return GrantRequest(
         request_id=request_id,
@@ -207,97 +197,95 @@ def input_grant_request(agent: CharityAgent):
 
 
 def view_requests(requests: List[GrantRequest]):
-    """Display current grant requests"""
     if not requests:
-        print("\nNo grant requests loaded.")
+        print("\nKhông có yêu cầu khoản từ thiện")
         return
     
     print("\n" + "=" * 80)
-    print("CURRENT GRANT REQUESTS")
+    print("Khoản từ thiện yêu cầu")
     print("=" * 80)
     
     total_requested = sum(r.amount_requested for r in requests)
     
     for i, req in enumerate(requests, 1):
         print(f"\n{i}. {req.program_name}")
-        print(f"   Agent: {req.agent.name}")
-        print(f"   Requested: ${req.amount_requested:,.0f}")
-        print(f"   People: {req.people_benefitted:,}")
-        print(f"   Category: {req.category.value}")
-        print(f"   Urgency: {req.urgency.name}")
+        print(f"   Tổ chức: {req.agent.name}")
+        print(f"   Yêu cầu: ${req.amount_requested:,.0f}")
+        print(f"   Người hưởng: {req.people_benefitted:,}")
+        print(f"   Chương trình: {req.category.value}")
+        print(f"   Độ cấp bách: {req.urgency.name}")
     
-    print(f"\nTotal Requested: ${total_requested:,.0f}")
+    print(f"\nLượng từ thiện yêu cầu: ${total_requested:,.0f}")
     print("=" * 80)
 
 
 def run_allocation_analysis(requests: List[GrantRequest]):
-    """Run allocation analysis with user-specified budget"""
     if not requests:
-        print("\nError: No grant requests loaded. Please load sample data or input custom requests first.")
+        print("\nError: Không có yêu cầu khoản từ thiện.")
         return None
     
     print("\n" + "-" * 80)
-    print("ALLOCATION ANALYSIS")
+    print("Phân tích phân bổ")
     print("-" * 80)
     
     while True:
         try:
-            budget = float(input("\nTotal Budget Available ($): ").strip())
+            budget = float(input("\nQuỹ ($): ").strip())
             if budget > 0:
                 break
-            print("Error: Budget must be positive")
+            print("Error: Quỹ phải là số dương")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     while True:
         try:
-            min_pct = float(input("Minimum Allocation Percentage (0-1, e.g., 0.5): ").strip())
+            min_pct = float(input("Tỷ lệ phân bổ tối thiểu (0-1, vd, 0.5): ").strip())
             if 0 <= min_pct <= 1:
                 break
-            print("Error: Must be between 0 and 1")
+            print("Error: Giá trị phaải nằm giữa 0 và 1")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
-    print("\nAllocation Strategies:")
-    print("1. Greedy (Full Funding Only)")
-    print("2. Greedy (Allow Partial Funding)")
-    print("3. Proportional Allocation")
-    print("4. Knapsack Optimization")
+    print("\nPhưng án phân bổ:")
+    print("1. Greedy (Chỉ từ thiện toàn bộ)")
+    print("2. Greedy (Cho phép từ thiện một phần)")
+    print("3. Phân bổ theo tỷ lệ")
+    print("4. Knapsack")
     
-    strategy = input("\nSelect strategy (1-4): ").strip()
+    strategy = input("\nSChọn phương án (1-4): ").strip()
     
     allocator = FundAllocator(total_budget=budget, min_allocation_percentage=min_pct)
     
     if strategy == '1':
         result = allocator.allocate_greedy(requests, allow_partial=False)
-        strategy_name = "Greedy (Full Funding)"
+        strategy_name = "Greedy (Từ thiện toàn bộ)"
     elif strategy == '2':
         result = allocator.allocate_greedy(requests, allow_partial=True)
-        strategy_name = "Greedy (Partial Allowed)"
+        strategy_name = "Greedy (Từ thiện một phần)"
     elif strategy == '3':
         result = allocator.allocate_proportional(requests)
-        strategy_name = "Proportional"
+        strategy_name = "Tỷ lệ"
     elif strategy == '4':
         result = allocator.allocate_knapsack(requests)
         strategy_name = "Knapsack"
     else:
-        print("Invalid choice. Using Greedy (Partial Allowed).")
+        print("Không hợp lệ, chọn Greedy (Từ thiện một phần)")
         result = allocator.allocate_greedy(requests, allow_partial=True)
-        strategy_name = "Greedy (Partial Allowed)"
+        strategy_name = "Greedy (Từ thiện một phần)"
     
     print("\n" + "=" * 80)
-    print(f"RESULTS - {strategy_name}")
+    print(f"Kết quả - {strategy_name}")
     print("=" * 80)
     print(result.summary())
     
-    print("\nDETAILED DECISIONS:")
+    print("\nChi tiết lựa chọn:")
     print("-" * 80)
     
     for decision in sorted(result.decisions, key=lambda d: d.rank):
         symbol = "[FULL]" if decision.is_fully_funded() else "[PART]" if decision.is_partially_funded() else "[REJ]"
         print(f"\n{symbol} Rank #{decision.rank}: {decision.request.program_name}")
-        print(f"   Allocated: ${decision.amount_allocated:,.0f} ({decision.allocation_percentage:.0%})")
-        print(f"   Rationale: {decision.rationale}")
+        print(f"   Phân bổ: ${decision.amount_allocated:,.0f} ({decision.allocation_percentage:.0%})")
+        print(f"   Cơ sở: {decision.rationale}")
     
     print("\n" + "=" * 80)
     
@@ -305,73 +293,71 @@ def run_allocation_analysis(requests: List[GrantRequest]):
 
 
 def compare_strategies(requests: List[GrantRequest]):
-    """Compare all allocation strategies"""
     if not requests:
-        print("\nError: No grant requests loaded.")
+        print("\nError: Không có yêu cầu khoản từ thiện.")
         return
     
     while True:
         try:
-            budget = float(input("\nTotal Budget Available ($): ").strip())
+            budget = float(input("\nTổng quỹ từ thiện ($): ").strip())
             if budget > 0:
                 break
-            print("Error: Budget must be positive")
+            print("Error: Quỹ phải là số dương")
         except ValueError:
-            print("Error: Please enter a valid number")
+            print("Error: Yêu cầu giá trị hợp lệ")
     
     allocator = FundAllocator(total_budget=budget)
     results = allocator.compare_strategies(requests)
     
     print("\n" + "=" * 80)
-    print("STRATEGY COMPARISON")
+    print("So sánh phương án")
     print("=" * 80)
     
     for name, result in results.items():
         print(f"\n{name.upper()}:")
-        print(f"  Allocated: ${result.total_allocated:,.0f} ({result.utilization_rate():.1f}%)")
-        print(f"  Fully Funded: {result.num_fully_funded}")
-        print(f"  Partially Funded: {result.num_partially_funded}")
-        print(f"  Rejected: {result.num_rejected}")
-        print(f"  People Benefitted: {result.total_people_benefitted:,}")
-        print(f"  Avg Efficiency: {result.average_efficiency_ratio:.1%}")
+        print(f"  Phân bổ: ${result.total_allocated:,.0f} ({result.utilization_rate():.1f}%)")
+        print(f"  Từ thiện hoàn toàn: {result.num_fully_funded}")
+        print(f"  Từ thiện một phần: {result.num_partially_funded}")
+        print(f"  Từ chối: {result.num_rejected}")
+        print(f"  Số người hưởng lợi: {result.total_people_benefitted:,}")
+        print(f"  Hiệu quả trung bình: {result.average_efficiency_ratio:.1%}")
     
     print("\n" + "=" * 80)
 
 
 def export_results(result, filename: str = "allocation_results.json"):
-    """Export results to JSON file"""
     if result is None:
-        print("\nError: No results to export. Run an allocation analysis first.")
+        print("\nError: Không có kết quả.")
         return
     
     output = {
-        'budget': {
-            'total': result.total_budget,
-            'allocated': result.total_allocated,
-            'remaining': result.remaining_budget,
-            'utilization_rate': result.utilization_rate()
+        'quỹ': {
+            'tổng': result.total_budget,
+            'phân bố': result.total_allocated,
+            'dư': result.remaining_budget,
+            'tỷ lệ': result.utilization_rate()
         },
-        'summary': {
-            'fully_funded': result.num_fully_funded,
-            'partially_funded': result.num_partially_funded,
-            'rejected': result.num_rejected,
-            'people_benefitted': result.total_people_benefitted,
-            'average_efficiency': result.average_efficiency_ratio
+        'tổng kết': {
+            'từ thiện hoa toàn': result.num_fully_funded,
+            'từ thiện một phần': result.num_partially_funded,
+            'từ chối': result.num_rejected,
+            'số người hưởng lợi': result.total_people_benefitted,
+            'hiệu quả trung bình': result.average_efficiency_ratio
         },
-        'decisions': []
+        'phương án': []
     }
     
     for decision in result.decisions:
         output['decisions'].append({
-            'rank': decision.rank,
-            'program_name': decision.request.program_name,
-            'agent': decision.request.agent.name,
-            'requested': decision.request.amount_requested,
-            'allocated': decision.amount_allocated,
-            'allocation_percentage': decision.allocation_percentage,
-            'priority_score': decision.priority_score,
-            'people_benefitted': int(decision.request.people_benefitted * decision.allocation_percentage),
-            'rationale': decision.rationale
+            'xếp hạng': decision.rank,
+            'tên chương trình': decision.request.program_name,
+            'tổ chức': decision.request.agent.name,
+            'yêu cầu': decision.request.amount_requested,
+            'phân bổ': decision.amount_allocated,
+            'tỷ lệ phân bổ': decision.allocation_percentage,
+            'mức độ cấp bách': decision.priority_score,
+            'số người hưởng lợi': int(decision.request.people_benefitted * decision.allocation_percentage),
+            'cơ sở': decision.rationale
         })
     
     with open(filename, 'w') as f:
@@ -381,7 +367,6 @@ def export_results(result, filename: str = "allocation_results.json"):
 
 
 def main():
-    """Main application loop"""
     print_header()
     
     requests = []
@@ -389,45 +374,43 @@ def main():
     
     while True:
         print_menu()
-        choice = input("Enter your choice (1-7): ").strip()
+        choice = input("Lựa chọn (1-7): ").strip()
         
         if choice == '1':
-            # Load sample data
             from example_usage import create_sample_requests
             requests = create_sample_requests()
-            print(f"\n[OK] Loaded {len(requests)} sample grant requests.")
+            print(f"\n[OK] {len(requests)} số lượng từ thiện yêu cầu(mẫu).")
         
         elif choice == '2':
-            # Input custom data
-            print("\nHow many grant requests do you want to input?")
+            print("\nBạn muốn có bao nhiêu yêu cầu từ thiện?")
             try:
-                num_requests = int(input("Number of requests: ").strip())
+                num_requests = int(input("Số lượng yêu cầu: ").strip())
             except ValueError:
-                print("Error: Invalid number")
+                print("Error: Yêu cầu không hợp lệ")
                 continue
             
             requests = []
             agents = {}
             
             for i in range(num_requests):
-                print(f"\n--- Request {i+1}/{num_requests} ---")
+                print(f"\n--- Yêu cầu thứ {i+1}/{num_requests} ---")
                 
-                print("\nDo you want to:")
-                print("1. Create a new agent")
-                print("2. Use an existing agent")
+                print("\nBạn muốn:")
+                print("1. Thêm tổ chức mới")
+                print("2. Lựa chọn tổ chức có sẵn")
                 
-                agent_choice = input("Choice (1-2): ").strip()
+                agent_choice = input("Lựa chọn (1-2): ").strip()
                 
                 if agent_choice == '2' and agents:
-                    print("\nExisting agents:")
+                    print("\nCác tổ chức có sẵn:")
                     for idx, (aid, agent) in enumerate(agents.items(), 1):
                         print(f"{idx}. {agent.name} ({aid})")
                     
                     try:
-                        agent_idx = int(input("Select agent (number): ").strip()) - 1
+                        agent_idx = int(input("Chọn tổ chức thứ (number): ").strip()) - 1
                         agent = list(agents.values())[agent_idx]
                     except (ValueError, IndexError):
-                        print("Invalid selection. Creating new agent.")
+                        print("Không hợp lệ. Thêm tổ chức mới.")
                         agent = input_agent()
                         agents[agent.agent_id] = agent
                 else:
@@ -437,14 +420,12 @@ def main():
                 request = input_grant_request(agent)
                 requests.append(request)
             
-            print(f"\n[OK] Added {len(requests)} grant requests.")
+            print(f"\n[OK] Đã thêm {len(requests)} yêu cầu.")
         
         elif choice == '3':
-            # Run allocation analysis
             last_result = run_allocation_analysis(requests)
         
         elif choice == '4':
-            # Compare strategies
             compare_strategies(requests)
         
         elif choice == '5':
@@ -459,13 +440,12 @@ def main():
             view_requests(requests)
         
         elif choice == '7':
-            # Exit
-            print("\nThank you for using the Charity Fund Decision Support System!")
+            print("\nThoát")
             print("=" * 80 + "\n")
             break
         
         else:
-            print("\nInvalid choice. Please select 1-7.")
+            print("\nLựa chọn không hợp lệ")
 
 
 if __name__ == "__main__":

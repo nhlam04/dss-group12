@@ -227,7 +227,7 @@ pip install -r requirements.txt
 3. Update Settings page UI
 
 ### Add Authentication
-```python
+```bash
 # Install flask-login
 pip install flask-login
 

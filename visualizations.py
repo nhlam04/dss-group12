@@ -1,8 +1,3 @@
-"""
-Interactive Visualization Dashboard
-Generates visual reports and charts for allocation decisions
-"""
-
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List

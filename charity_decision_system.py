@@ -1,10 +1,3 @@
-"""
-Charity Fund Decision Support System
-
-A multi-criteria decision-making system that helps charity funds allocate
-resources to grant requests using TOPSIS ranking and optimization algorithms.
-"""
-
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple, Optional
 from enum import Enum
@@ -13,67 +6,66 @@ from datetime import datetime
 
 
 class ProgramCategory(Enum):
-    """Categories of charity programs"""
-    HEALTHCARE = "Healthcare"
-    EDUCATION = "Education"
-    FOOD_SECURITY = "Food Security"
-    DISASTER_RELIEF = "Disaster Relief"
-    HOUSING = "Housing"
-    ENVIRONMENT = "Environment"
-    OTHER = "Other"
+    """Các loại chương trình từ thiện"""
+    HEALTHCARE = "Y tế"
+    EDUCATION = "Giáo dục"
+    FOOD_SECURITY = "Thực phẩm"
+    DISASTER_RELIEF = "H trợ thiên tai"
+    HOUSING = "Nhà ở"
+    ENVIRONMENT = "Môi trường"
+    OTHER = "Khác"
 
 
 class UrgencyLevel(Enum):
-    """Urgency levels for programs"""
-    CRITICAL = 5  # Immediate need (e.g., disaster relief)
-    HIGH = 4      # Urgent but not immediate
-    MEDIUM = 3    # Standard timeline
-    LOW = 2       # Can be delayed
-    FLEXIBLE = 1  # No time constraints
+    """Tính cấp bách"""
+    CRITICAL = 5
+    HIGH = 4
+    MEDIUM = 3
+    LOW = 2
+    FLEXIBLE = 1
 
 
 @dataclass
 class CharityAgent:
-    """Represents an organization requesting funds"""
+    """Tổ chức yêu cầu từ thiện"""
     agent_id: str
     name: str
-    transparency_score: float  # Accountability score (0-1)
+    transparency_score: float
     total_programs_completed: int
     programs_succeeded: int
     
     @property
     def success_rate(self) -> float:
-        """Calculate success rate from completed programs"""
+        """Tính toán mức độ hoàn thành"""
         if self.total_programs_completed == 0:
             return 0.0
         return self.programs_succeeded / self.total_programs_completed
     
     def __post_init__(self):
         if self.total_programs_completed < 0:
-            raise ValueError("Total programs completed must be non-negative")
+            raise ValueError("Số lượng chương trình không thể là số âm")
         if self.programs_succeeded < 0:
-            raise ValueError("Programs succeeded must be non-negative")
+            raise ValueError("Số chương trình thành coong không thể là số âm")
         if self.programs_succeeded > self.total_programs_completed:
-            raise ValueError("Programs succeeded cannot exceed total programs")
+            raise ValueError("Số chương trình thành công không thể vượt quá số lượng chương trình")
         if not (0 <= self.transparency_score <= 1):
-            raise ValueError("Transparency score must be between 0 and 1")
+            raise ValueError("mức độ minh bạch phải là giá trị giữa 0 và 1")
 
 
 @dataclass
 class GrantRequest:
-    """Represents a grant request for a charity program"""
     request_id: str
     agent: CharityAgent
     program_name: str
-    amount_requested: float  # Total amount in dollars
-    overhead_cost: float     # Non-charity administrative costs
-    people_benefitted: int   # Number of people impacted
-    duration_months: int     # Time to complete program
+    amount_requested: float
+    overhead_cost: float
+    people_benefitted: int
+    duration_months: int
     category: ProgramCategory
     urgency: UrgencyLevel
-    sustainability_score: float  # Long-term impact score (0-1)
-    status: str = 'pending'  # 'pending', 'funded', 'rejected', or 'completed'
-    succeeded: bool = False  # Only relevant if status is 'completed'
+    sustainability_score: float
+    status: str = 'pending'
+    succeeded: bool = False
     
     # Calculated fields
     net_charity_amount: float = field(init=False)
@@ -81,56 +73,51 @@ class GrantRequest:
     
     def __post_init__(self):
         if self.amount_requested <= 0:
-            raise ValueError("Amount requested must be positive")
+            raise ValueError("Yêu cầu không thể âm")
         if self.overhead_cost < 0:
-            raise ValueError("Overhead cost cannot be negative")
+            raise ValueError("Chi phí không thể âm")
         if self.overhead_cost >= self.amount_requested:
-            raise ValueError("Overhead cost cannot exceed total amount")
+            raise ValueError("Chi phí không thể vượt quá yêu cầu")
         if self.people_benefitted <= 0:
-            raise ValueError("People benefitted must be positive")
+            raise ValueError("Số người hưởng lợi không thể âm")
         if self.duration_months <= 0:
-            raise ValueError("Duration must be positive")
+            raise ValueError("Thời lượng không th âm")
         if not (0 <= self.sustainability_score <= 1):
-            raise ValueError("Sustainability score must be between 0 and 1")
+            raise ValueError("Độ bền vững là giá trị giữa 0 và 1")
         if self.status not in ['pending', 'funded', 'rejected', 'completed']:
-            raise ValueError("Status must be 'pending', 'funded', 'rejected', or 'completed'")
+            raise ValueError("Trạng thái phải là 'pending', 'funded', 'rejected', hoặc 'completed'")
         
         self.net_charity_amount = self.amount_requested - self.overhead_cost
         self.overhead_ratio = self.overhead_cost / self.amount_requested
     
     def cost_per_person(self) -> float:
-        """Calculate cost per person benefitted"""
         return self.amount_requested / self.people_benefitted
     
     def net_cost_per_person(self) -> float:
-        """Calculate net cost per person (excluding overhead)"""
         return self.net_charity_amount / self.people_benefitted
     
     def monthly_impact(self) -> float:
-        """Calculate people benefitted per month"""
         return self.people_benefitted / self.duration_months
     
     def efficiency_ratio(self) -> float:
-        """Calculate ratio of money going to charity vs overhead"""
         return 1 - self.overhead_ratio
     
     def risk_adjusted_benefit(self) -> float:
-        """Calculate expected benefit adjusted for agent's success rate"""
         return self.people_benefitted * self.agent.success_rate
 
 
 @dataclass
 class AllocationDecision:
-    """Represents a funding allocation decision"""
+    """Phân bổ tiền"""
     request: GrantRequest
     amount_allocated: float
-    allocation_percentage: float  # What % of request was granted
-    priority_score: float  # TOPSIS score
-    rank: int  # Ranking among all requests
-    rationale: str  # Explanation of decision
+    allocation_percentage: float
+    priority_score: float
+    rank: int
+    rationale: str
     
     def is_fully_funded(self) -> bool:
-        return self.allocation_percentage >= 0.99  # 99% or more
+        return self.allocation_percentage >= 0.99
     
     def is_partially_funded(self) -> bool:
         return 0 < self.allocation_percentage < 0.99
@@ -141,7 +128,7 @@ class AllocationDecision:
 
 @dataclass
 class FundAllocationResult:
-    """Results of the fund allocation process"""
+    """Kết quả phân bổ"""
     total_budget: float
     total_allocated: float
     remaining_budget: float
@@ -153,25 +140,23 @@ class FundAllocationResult:
     average_efficiency_ratio: float
     
     def utilization_rate(self) -> float:
-        """Calculate budget utilization percentage"""
         return (self.total_allocated / self.total_budget) * 100
     
     def summary(self) -> str:
-        """Generate a summary report"""
         return f"""
-Fund Allocation Summary:
+Tổng kết phân ổ:
 ------------------------
-Total Budget: ${self.total_budget:,.2f}
-Total Allocated: ${self.total_allocated:,.2f}
-Remaining: ${self.remaining_budget:,.2f}
-Utilization Rate: {self.utilization_rate():.1f}%
+Tổng quỹ: ${self.total_budget:,.2f}
+Tổng phân bổ: ${self.total_allocated:,.2f}
+Còn dư: ${self.remaining_budget:,.2f}
+Hiệu quả: {self.utilization_rate():.1f}%
 
-Decisions:
-- Fully Funded: {self.num_fully_funded}
-- Partially Funded: {self.num_partially_funded}
-- Rejected: {self.num_rejected}
+Quyết định:
+- Từ thiện hoàn toàn: {self.num_fully_funded}
+- Từ thiện một phần: {self.num_partially_funded}
+- Từ chối: {self.num_rejected}
 
-Impact:
-- Total People Benefitted: {self.total_people_benefitted:,}
-- Average Efficiency Ratio: {self.average_efficiency_ratio:.1%}
+Mức độ ảnh hưởng:
+- Số người hưởng lợi: {self.total_people_benefitted:,}
+- Hiệu quả trung bình: {self.average_efficiency_ratio:.1%}
 """

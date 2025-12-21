@@ -1,6 +1,5 @@
 """
-Flask Web Application - Backend API
-RESTful API for charity fund decision support system
+Backend API
 """
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
@@ -27,32 +26,26 @@ db = Database()
 
 @app.route('/')
 def index():
-    """Dashboard page"""
     return render_template('index.html')
 
 @app.route('/agents')
 def agents_page():
-    """Charity agents management page"""
     return render_template('agents.html')
 
 @app.route('/requests')
 def requests_page():
-    """Grant requests management page"""
     return render_template('requests.html')
 
 @app.route('/allocate')
 def allocate_page():
-    """Allocation analysis page"""
     return render_template('allocate.html')
 
 @app.route('/history')
 def history_page():
-    """Allocation history page"""
     return render_template('history.html')
 
 @app.route('/settings')
 def settings_page():
-    """Settings page"""
     return render_template('settings.html')
 
 # ===== API ENDPOINTS =====
@@ -60,7 +53,6 @@ def settings_page():
 # --- Stats ---
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    """Get dashboard statistics"""
     try:
         stats = db.get_stats()
         fund_config = db.get_fund_config()
@@ -72,7 +64,6 @@ def get_stats():
 # --- Charity Agents ---
 @app.route('/api/agents', methods=['GET'])
 def get_agents():
-    """Get all charity agents"""
     try:
         agents = db.get_all_agents()
         return jsonify([{
@@ -88,7 +79,6 @@ def get_agents():
 
 @app.route('/api/agents/<int:agent_id>', methods=['GET'])
 def get_agent(agent_id):
-    """Get a specific agent"""
     try:
         agent = db.get_agent(agent_id)
         if agent:
@@ -106,7 +96,6 @@ def get_agent(agent_id):
 
 @app.route('/api/agents', methods=['POST'])
 def create_agent():
-    """Create a new charity agent"""
     try:
         data = request.json
         agent_id = db.add_agent(
@@ -125,7 +114,6 @@ def create_agent():
 
 @app.route('/api/agents/<int:agent_id>', methods=['PUT'])
 def update_agent(agent_id):
-    """Update a charity agent"""
     try:
         data = request.json
         
@@ -144,7 +132,6 @@ def update_agent(agent_id):
 
 @app.route('/api/agents/<int:agent_id>', methods=['DELETE'])
 def delete_agent(agent_id):
-    """Delete a charity agent"""
     try:
         if db.delete_agent(agent_id):
             return jsonify({'message': 'Agent deleted successfully'})
@@ -156,7 +143,6 @@ def delete_agent(agent_id):
 # --- Grant Requests ---
 @app.route('/api/requests', methods=['GET'])
 def get_requests():
-    """Get all grant requests"""
     try:
         status = request.args.get('status')
         requests_list = db.get_all_requests(status)
@@ -184,11 +170,9 @@ def get_requests():
 
 @app.route('/api/requests', methods=['POST'])
 def create_request():
-    """Create a new grant request"""
     try:
         data = request.json
-        
-        # Validate agent exists
+
         agent = db.get_agent(int(data['agent_id']))
         if not agent:
             return jsonify({'error': 'Agent not found'}), 404
@@ -214,7 +198,6 @@ def create_request():
 
 @app.route('/api/requests/<int:request_id>', methods=['DELETE'])
 def delete_request(request_id):
-    """Delete a grant request"""
     try:
         if db.delete_request(request_id):
             return jsonify({'message': 'Request deleted successfully'})
@@ -225,7 +208,6 @@ def delete_request(request_id):
 
 @app.route('/api/requests/<int:request_id>/complete', methods=['POST'])
 def mark_request_completed(request_id):
-    """Mark a request as completed (succeeded or failed)"""
     try:
         data = request.json
         succeeded = data.get('succeeded', False)
@@ -242,10 +224,8 @@ def mark_request_completed(request_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Fund Configuration ---
 @app.route('/api/fund-config', methods=['GET'])
 def get_fund_config():
-    """Get fund configuration"""
     try:
         config = db.get_fund_config()
         return jsonify(config)
@@ -254,7 +234,6 @@ def get_fund_config():
 
 @app.route('/api/fund-config', methods=['PUT'])
 def update_fund_config():
-    """Update fund configuration"""
     try:
         data = request.json
         db.update_fund_config(
@@ -266,41 +245,33 @@ def update_fund_config():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-# --- Allocation ---
 @app.route('/api/allocate', methods=['POST'])
 def run_allocation():
-    """Run allocation analysis"""
     try:
         data = request.json
         strategy = data.get('strategy', 'greedy_partial')
-        
-        # Get pending requests
+
         requests = db.get_all_requests('pending')
         
         if not requests:
             return jsonify({'error': 'No pending requests to allocate'}), 400
-        
-        # Get fund configuration
+
         config = db.get_fund_config()
         budget = config['total_budget'] - config['allocated_budget']
         
         if budget <= 0:
             return jsonify({'error': 'No budget remaining'}), 400
-        
-        # Get criteria weights
+
         weights = db.get_criteria_weights()
-        
-        # Create allocator
+
         allocator = FundAllocator(
             total_budget=budget,
             min_allocation_percentage=config['min_allocation_percentage']
         )
-        
-        # Set custom weights if provided
+
         if weights:
             allocator.analyzer.weights = weights
-        
-        # Run allocation based on strategy
+
         if strategy == 'greedy_full':
             result = allocator.allocate_greedy(requests, allow_partial=False)
         elif strategy == 'greedy_partial':
@@ -311,15 +282,12 @@ def run_allocation():
             result = allocator.allocate_knapsack(requests)
         else:
             return jsonify({'error': 'Invalid strategy'}), 400
-        
-        # Save allocation to database
+
         allocation_id = db.save_allocation(result, strategy)
-        
-        # Update allocated budget
+
         new_allocated = config['allocated_budget'] + result.total_allocated
         db.update_fund_config(allocated_budget=new_allocated)
-        
-        # Return result
+
         return jsonify({
             'allocation_id': allocation_id,
             'total_budget': result.total_budget,
@@ -351,7 +319,6 @@ def run_allocation():
 
 @app.route('/api/allocate/preview', methods=['POST'])
 def preview_allocation():
-    """Preview allocation without saving"""
     try:
         data = request.json
         strategy = data.get('strategy', 'greedy_partial')
@@ -374,8 +341,7 @@ def preview_allocation():
         
         if weights:
             allocator.analyzer.weights = weights
-        
-        # Run allocation
+
         if strategy == 'greedy_full':
             result = allocator.allocate_greedy(requests, allow_partial=False)
         elif strategy == 'greedy_partial':
@@ -415,10 +381,8 @@ def preview_allocation():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Allocation History ---
 @app.route('/api/history', methods=['GET'])
 def get_history():
-    """Get allocation history"""
     try:
         limit = request.args.get('limit', 10, type=int)
         history = db.get_allocation_history(limit)
@@ -428,7 +392,6 @@ def get_history():
 
 @app.route('/api/history/<int:allocation_id>', methods=['GET'])
 def get_allocation_details(allocation_id):
-    """Get detailed allocation information"""
     try:
         details = db.get_allocation_details(allocation_id)
         if details:
@@ -438,10 +401,8 @@ def get_allocation_details(allocation_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- Criteria Weights ---
 @app.route('/api/criteria-weights', methods=['GET'])
 def get_weights():
-    """Get criteria weights"""
     try:
         weights = db.get_criteria_weights()
         return jsonify(weights)
@@ -450,11 +411,9 @@ def get_weights():
 
 @app.route('/api/criteria-weights', methods=['PUT'])
 def update_weights():
-    """Update criteria weights"""
     try:
         weights = request.json
-        
-        # Validate weights sum to 1
+
         total = sum(weights.values())
         if not (0.99 <= total <= 1.01):
             return jsonify({'error': f'Weights must sum to 1, got {total}'}), 400
@@ -466,26 +425,22 @@ def update_weights():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-# --- Enums ---
 @app.route('/api/enums/categories', methods=['GET'])
 def get_categories():
-    """Get program categories"""
     return jsonify([cat.name for cat in ProgramCategory])
 
 @app.route('/api/enums/urgency-levels', methods=['GET'])
 def get_urgency_levels():
-    """Get urgency levels"""
     return jsonify([level.name for level in UrgencyLevel])
 
 
 if __name__ == '__main__':
-    # Create directories if they don't exist
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static/css', exist_ok=True)
     os.makedirs('static/js', exist_ok=True)
     
     print("=" * 80)
-    print("CHARITY FUND DECISION SUPPORT SYSTEM - WEB APPLICATION")
+    print("Hệ thống Hỗ trợ Quyết định cho Quỹ Từ thiện")
     print("=" * 80)
     print("\nServer starting...")
     print("Access the application at: http://localhost:5000")
