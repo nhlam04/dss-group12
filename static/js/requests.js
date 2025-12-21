@@ -2,21 +2,26 @@
 
 let requests = [];
 let agents = [];
+let currentFilter = null;
 
 // Load all requests
-async function loadRequests(status = null) {
+async function loadRequests(status = undefined) {
+    if (status !== undefined) {
+        currentFilter = status;
+    }
+
     try {
-        const url = status ? `/api/requests?status=${status}` : '/api/requests';
+        const url = currentFilter ? `/api/requests?status=${currentFilter}` : '/api/requests';
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             const error = await response.json();
             showError(error.error || 'Failed to load requests');
             return;
         }
-        
+
         requests = await response.json();
-        
+
         // Ensure requests is an array
         if (!Array.isArray(requests)) {
             console.error('Invalid response:', requests);
@@ -24,7 +29,7 @@ async function loadRequests(status = null) {
             requests = [];
             return;
         }
-        
+
         displayRequests();
     } catch (error) {
         showError('Failed to load requests: ' + error.message);
@@ -37,7 +42,7 @@ async function loadAgents() {
     try {
         const response = await fetch('/api/agents');
         agents = await response.json();
-        
+
         const select = document.getElementById('agentSelect');
         select.innerHTML = '<option value="">Select an agent...</option>';
         agents.forEach(agent => {
@@ -55,15 +60,15 @@ async function loadEnums() {
             fetch('/api/enums/categories'),
             fetch('/api/enums/urgency-levels')
         ]);
-        
+
         const categories = await categoriesRes.json();
         const urgencyLevels = await urgencyRes.json();
-        
+
         const categorySelect = document.getElementById('category');
         categories.forEach(cat => {
             categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
         });
-        
+
         const urgencySelect = document.getElementById('urgency');
         urgencyLevels.forEach(level => {
             urgencySelect.innerHTML += `<option value="${level}">${level}</option>`;
@@ -77,34 +82,34 @@ async function loadEnums() {
 function displayRequests() {
     const tbody = document.getElementById('requestsTable');
     tbody.innerHTML = '';
-    
+
     requests.forEach(req => {
         let statusBadge = '';
         if (req.status === 'pending') {
             statusBadge = '<span class="badge bg-warning">Pending</span>';
         } else if (req.status === 'funded') {
-            if (req.succeeded === 1) {
+            if (req.succeeded === true) {
                 statusBadge = '<span class="badge bg-success">Funded</span> <span class="badge bg-success">Succeeded</span>';
-            } else if (req.succeeded === 0) {
+            } else if (req.succeeded === false) {
                 statusBadge = '<span class="badge bg-success">Funded</span> <span class="badge bg-danger">Failed</span>';
             } else {
                 statusBadge = '<span class="badge bg-success">Funded</span>';
             }
         } else if (req.status === 'rejected') {
-            if (req.succeeded === 1) {
+            if (req.succeeded === true) {
                 statusBadge = '<span class="badge bg-danger">Rejected</span> <span class="badge bg-success">Succeeded</span>';
-            } else if (req.succeeded === 0) {
+            } else if (req.succeeded === false) {
                 statusBadge = '<span class="badge bg-danger">Rejected</span> <span class="badge bg-danger">Failed</span>';
             } else {
                 statusBadge = '<span class="badge bg-danger">Rejected</span>';
             }
         } else if (req.status === 'completed') {
             // Legacy support for old data
-            statusBadge = req.succeeded ? 
+            statusBadge = req.succeeded ?
                 '<span class="badge bg-success">Succeeded</span>' :
                 '<span class="badge bg-danger">Failed</span>';
         }
-        
+
         let actionButtons = '';
         if (req.status === 'funded' || req.status === 'rejected') {
             // Only show succeed/fail buttons if not yet marked (succeeded is null or undefined)
@@ -143,7 +148,7 @@ function displayRequests() {
                 </button>
             `;
         }
-        
+
         const row = `
             <tr>
                 <td>${req.request_id}</td>
@@ -169,14 +174,14 @@ function filterRequests(status) {
         btn.classList.remove('active');
     });
     event.target.classList.add('active');
-    
+
     loadRequests(status === 'all' ? null : status);
 }
 
 // Add new request
 document.getElementById('addRequestForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const requestData = {
         agent_id: document.getElementById('agentSelect').value,
         program_name: document.getElementById('programName').value,
@@ -188,19 +193,19 @@ document.getElementById('addRequestForm').addEventListener('submit', async (e) =
         urgency: document.getElementById('urgency').value,
         sustainability_score: parseFloat(document.getElementById('sustainabilityScore').value)
     };
-    
+
     try {
         const response = await fetch('/api/requests', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
         });
-        
+
         if (response.ok) {
             showSuccess('Request added successfully');
             bootstrap.Modal.getInstance(document.getElementById('addRequestModal')).hide();
             document.getElementById('addRequestForm').reset();
-            loadRequests();
+            loadRequests(currentFilter);
         } else {
             const error = await response.json();
             showError(error.error);
@@ -213,17 +218,17 @@ document.getElementById('addRequestForm').addEventListener('submit', async (e) =
 // Mark request as completed
 async function markCompleted(requestId, succeeded) {
     const status = succeeded ? 'succeeded' : 'failed';
-    
+
     try {
         const response = await fetch(`/api/requests/${requestId}/complete`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ succeeded })
         });
-        
+
         if (response.ok) {
             showSuccess(`Request marked as ${status}. Agent statistics updated.`);
-            loadRequests();
+            loadRequests(currentFilter);
         } else {
             const error = await response.json();
             showError(error.error);
@@ -236,15 +241,15 @@ async function markCompleted(requestId, succeeded) {
 // Delete request
 async function deleteRequest(requestId) {
     if (!confirm('Are you sure you want to delete this request?')) return;
-    
+
     try {
         const response = await fetch(`/api/requests/${requestId}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showSuccess('Request deleted successfully');
-            loadRequests();
+            loadRequests(currentFilter);
         } else {
             const error = await response.json();
             showError(error.error);

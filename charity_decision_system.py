@@ -73,7 +73,7 @@ class GrantRequest:
     urgency: UrgencyLevel
     sustainability_score: float  # Long-term impact score (0-1)
     status: str = 'pending'  # 'pending', 'funded', 'rejected', or 'completed'
-    succeeded: bool = False  # Only relevant if status is 'completed'
+    succeeded: Optional[bool] = None  # Only relevant if status is 'funded' or 'rejected'
     
     # Calculated fields
     net_charity_amount: float = field(init=False)
