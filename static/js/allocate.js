@@ -28,7 +28,7 @@ async function previewAllocation() {
             document.getElementById('loadingMessage').style.display = 'block';
         }
     } catch (error) {
-        showError('Failed to preview allocation: ' + error.message);
+        showError('Không thể xem trước phân bổ: ' + error.message);
         document.getElementById('loadingSpinner').style.display = 'none';
         document.getElementById('loadingMessage').style.display = 'block';
     }
@@ -38,7 +38,7 @@ async function previewAllocation() {
 document.getElementById('allocationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    if (!confirm('Are you sure you want to run this allocation? This will update the database.')) return;
+    if (!confirm('Bạn có chắc chắn muốn chạy phân bổ này? Điều này sẽ cập nhật cơ sở dữ liệu.')) return;
     
     const strategy = document.getElementById('strategy').value;
     
@@ -57,7 +57,7 @@ document.getElementById('allocationForm').addEventListener('submit', async (e) =
         if (response.ok) {
             currentResult = await response.json();
             displayResults(currentResult);
-            showSuccess('Allocation completed successfully!');
+            showSuccess('Phân bổ đã hoàn thành thành công!');
         } else {
             const error = await response.json();
             showError(error.error);
@@ -65,7 +65,7 @@ document.getElementById('allocationForm').addEventListener('submit', async (e) =
             document.getElementById('loadingMessage').style.display = 'block';
         }
     } catch (error) {
-        showError('Failed to run allocation: ' + error.message);
+        showError('Không thể chạy phân bổ: ' + error.message);
         document.getElementById('loadingSpinner').style.display = 'none';
         document.getElementById('loadingMessage').style.display = 'block';
     }
@@ -96,11 +96,11 @@ function displayResults(result) {
     result.decisions.forEach(decision => {
         let statusBadge;
         if (decision.is_fully_funded) {
-            statusBadge = '<span class="badge bg-success">FULL</span>';
+            statusBadge = '<span class="badge bg-success">TOÀN BỘ</span>';
         } else if (decision.is_partially_funded) {
-            statusBadge = '<span class="badge bg-warning">PARTIAL</span>';
+            statusBadge = '<span class="badge bg-warning">MỘT PHẦN</span>';
         } else {
-            statusBadge = '<span class="badge bg-danger">REJECTED</span>';
+            statusBadge = '<span class="badge bg-danger">TỪ CHỐI</span>';
         }
         
         const row = `

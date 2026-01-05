@@ -1,56 +1,56 @@
 {% extends "base.html" %}
 
-{% block title %}Settings - Charity Fund DSS{% endblock %}
+{% block title %}Cài Đặt - Hệ thống Quỹ Từ thiện{% endblock %}
 
 {% block content %}
-<h1 class="mb-4"><i class="bi bi-gear"></i> Settings</h1>
+<h1 class="mb-4"><i class="bi bi-gear"></i> Cài Đặt</h1>
 
 <div class="card">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">TOPSIS Criteria Weights</h5>
+        <h5 class="mb-0">Trọng Số Tiêu Chí TOPSIS</h5>
     </div>
     <div class="card-body">
-        <p class="text-muted">Adjust the importance of each criterion. Weights must sum to 1.0</p>
+        <p class="text-muted">Điều chỉnh tầm quan trọng của từng tiêu chí. Tổng trọng số phải bằng 1.0</p>
         <form id="weightsForm">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="weightPeople" class="form-label">People Benefitted</label>
+                    <label for="weightPeople" class="form-label">Số Người Hưởng Lợi</label>
                     <input type="number" class="form-control weight-input" id="weightPeople" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="weightEfficiency" class="form-label">Efficiency (Low Overhead)</label>
+                    <label for="weightEfficiency" class="form-label">Hiệu Quả (Chi Phí Quản Lý Thấp)</label>
                     <input type="number" class="form-control weight-input" id="weightEfficiency" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="weightSuccess" class="form-label">Success Rate</label>
+                    <label for="weightSuccess" class="form-label">Tỷ Lệ Thành Công</label>
                     <input type="number" class="form-control weight-input" id="weightSuccess" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="weightCost" class="form-label">Cost Effectiveness</label>
+                    <label for="weightCost" class="form-label">Hiệu Quả Chi Phí</label>
                     <input type="number" class="form-control weight-input" id="weightCost" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="weightUrgency" class="form-label">Urgency</label>
+                    <label for="weightUrgency" class="form-label">Mức Độ Khẩn Cấp</label>
                     <input type="number" class="form-control weight-input" id="weightUrgency" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="weightSustainability" class="form-label">Sustainability</label>
+                    <label for="weightSustainability" class="form-label">Bền Vững</label>
                     <input type="number" class="form-control weight-input" id="weightSustainability" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="weightTransparency" class="form-label">Transparency</label>
+                    <label for="weightTransparency" class="form-label">Minh Bạch</label>
                     <input type="number" class="form-control weight-input" id="weightTransparency" step="0.01" min="0" max="1" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Total Weight</label>
+                    <label class="form-label">Tổng Trọng Số</label>
                     <input type="text" class="form-control" id="totalWeight" value="1.00" readonly>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Save Weights
+                <i class="bi bi-save"></i> Lưu Trọng Số
             </button>
             <button type="button" class="btn btn-secondary" onclick="resetWeights()">
-                <i class="bi bi-arrow-counterclockwise"></i> Reset to Defaults
+                <i class="bi bi-arrow-counterclockwise"></i> Đặt Lại Mặc Định
             </button>
         </form>
     </div>

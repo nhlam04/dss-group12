@@ -16,7 +16,7 @@ async function loadRequests(status = undefined) {
 
         if (!response.ok) {
             const error = await response.json();
-            showError(error.error || 'Failed to load requests');
+            showError(error.error || 'Không thể tải danh sách yêu cầu');
             return;
         }
 
@@ -25,14 +25,14 @@ async function loadRequests(status = undefined) {
         // Ensure requests is an array
         if (!Array.isArray(requests)) {
             console.error('Invalid response:', requests);
-            showError('Invalid response from server');
+            showError('Phản hồi không hợp lệ từ server');
             requests = [];
             return;
         }
 
         displayRequests();
     } catch (error) {
-        showError('Failed to load requests: ' + error.message);
+        showError('Không thể tải danh sách yêu cầu: ' + error.message);
         requests = [];
     }
 }
@@ -44,12 +44,12 @@ async function loadAgents() {
         agents = await response.json();
 
         const select = document.getElementById('agentSelect');
-        select.innerHTML = '<option value="">Select an agent...</option>';
+        select.innerHTML = '<option value="">Chọn một tổ chức...</option>';
         agents.forEach(agent => {
             select.innerHTML += `<option value="${agent.agent_id}">${agent.name}</option>`;
         });
     } catch (error) {
-        showError('Failed to load agents: ' + error.message);
+        showError('Không thể tải danh sách tổ chức: ' + error.message);
     }
 }
 
@@ -74,7 +74,7 @@ async function loadEnums() {
             urgencySelect.innerHTML += `<option value="${level}">${level}</option>`;
         });
     } catch (error) {
-        showError('Failed to load options: ' + error.message);
+        showError('Không thể tải các tùy chọn: ' + error.message);
     }
 }
 
@@ -86,28 +86,28 @@ function displayRequests() {
     requests.forEach(req => {
         let statusBadge = '';
         if (req.status === 'pending') {
-            statusBadge = '<span class="badge bg-warning">Pending</span>';
+            statusBadge = '<span class="badge bg-warning">Đang Chờ</span>';
         } else if (req.status === 'funded') {
             if (req.succeeded === true) {
-                statusBadge = '<span class="badge bg-success">Funded</span> <span class="badge bg-success">Succeeded</span>';
+                statusBadge = '<span class="badge bg-success">Đã Tài Trợ</span> <span class="badge bg-success">Thành Công</span>';
             } else if (req.succeeded === false) {
-                statusBadge = '<span class="badge bg-success">Funded</span> <span class="badge bg-danger">Failed</span>';
+                statusBadge = '<span class="badge bg-success">Đã Tài Trợ</span> <span class="badge bg-danger">Thất Bại</span>';
             } else {
-                statusBadge = '<span class="badge bg-success">Funded</span>';
+                statusBadge = '<span class="badge bg-success">Đã Tài Trợ</span>';
             }
         } else if (req.status === 'rejected') {
             if (req.succeeded === true) {
-                statusBadge = '<span class="badge bg-danger">Rejected</span> <span class="badge bg-success">Succeeded</span>';
+                statusBadge = '<span class="badge bg-danger">Từ Chối</span> <span class="badge bg-success">Thành Công</span>';
             } else if (req.succeeded === false) {
-                statusBadge = '<span class="badge bg-danger">Rejected</span> <span class="badge bg-danger">Failed</span>';
+                statusBadge = '<span class="badge bg-danger">Từ Chối</span> <span class="badge bg-danger">Thất Bại</span>';
             } else {
-                statusBadge = '<span class="badge bg-danger">Rejected</span>';
+                statusBadge = '<span class="badge bg-danger">Từ Chối</span>';
             }
         } else if (req.status === 'completed') {
             // Legacy support for old data
             statusBadge = req.succeeded ?
-                '<span class="badge bg-success">Succeeded</span>' :
-                '<span class="badge bg-danger">Failed</span>';
+                '<span class="badge bg-success">Thành Công</span>' :
+                '<span class="badge bg-danger">Thất Bại</span>';
         }
 
         let actionButtons = '';
@@ -115,10 +115,10 @@ function displayRequests() {
             // Only show succeed/fail buttons if not yet marked (succeeded is null or undefined)
             if (req.succeeded === null || req.succeeded === undefined) {
                 actionButtons = `
-                    <button class="btn btn-sm btn-success" onclick="markCompleted(${req.request_id}, true)" title="Mark as Succeeded">
+                    <button class="btn btn-sm btn-success" onclick="markCompleted(${req.request_id}, true)" title="Đánh dấu Thành Công">
                         <i class="bi bi-check-circle"></i>
                     </button>
-                    <button class="btn btn-sm btn-warning" onclick="markCompleted(${req.request_id}, false)" title="Mark as Failed">
+                    <button class="btn btn-sm btn-warning" onclick="markCompleted(${req.request_id}, false)" title="Đánh dấu Thất Bại">
                         <i class="bi bi-x-circle"></i>
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="deleteRequest(${req.request_id})">
@@ -202,7 +202,7 @@ document.getElementById('addRequestForm').addEventListener('submit', async (e) =
         });
 
         if (response.ok) {
-            showSuccess('Request added successfully');
+            showSuccess('Đã thêm yêu cầu thành công');
             bootstrap.Modal.getInstance(document.getElementById('addRequestModal')).hide();
             document.getElementById('addRequestForm').reset();
             loadRequests(currentFilter);
@@ -211,13 +211,13 @@ document.getElementById('addRequestForm').addEventListener('submit', async (e) =
             showError(error.error);
         }
     } catch (error) {
-        showError('Failed to add request: ' + error.message);
+        showError('Không thể thêm yêu cầu: ' + error.message);
     }
 });
 
 // Mark request as completed
 async function markCompleted(requestId, succeeded) {
-    const status = succeeded ? 'succeeded' : 'failed';
+    const status = succeeded ? 'thành công' : 'thất bại';
 
     try {
         const response = await fetch(`/api/requests/${requestId}/complete`, {
@@ -227,20 +227,20 @@ async function markCompleted(requestId, succeeded) {
         });
 
         if (response.ok) {
-            showSuccess(`Request marked as ${status}. Agent statistics updated.`);
+            showSuccess(`Đã đánh dấu yêu cầu là ${status}. Thống kê tổ chức đã được cập nhật.`);
             loadRequests(currentFilter);
         } else {
             const error = await response.json();
             showError(error.error);
         }
     } catch (error) {
-        showError('Failed to update request: ' + error.message);
+        showError('Không thể cập nhật yêu cầu: ' + error.message);
     }
 }
 
 // Delete request
 async function deleteRequest(requestId) {
-    if (!confirm('Are you sure you want to delete this request?')) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa yêu cầu này?')) return;
 
     try {
         const response = await fetch(`/api/requests/${requestId}`, {
@@ -248,14 +248,14 @@ async function deleteRequest(requestId) {
         });
 
         if (response.ok) {
-            showSuccess('Request deleted successfully');
+            showSuccess('Đã xóa yêu cầu thành công');
             loadRequests(currentFilter);
         } else {
             const error = await response.json();
             showError(error.error);
         }
     } catch (error) {
-        showError('Failed to delete request: ' + error.message);
+        showError('Không thể xóa yêu cầu: ' + error.message);
     }
 }
 

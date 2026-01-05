@@ -6,7 +6,7 @@ async function loadHistory() {
         const history = await response.json();
         displayHistory(history);
     } catch (error) {
-        showError('Failed to load history: ' + error.message);
+        showError('Không thể tải lịch sử: ' + error.message);
     }
 }
 
@@ -31,7 +31,7 @@ function displayHistory(history) {
                 <td>${formatNumber(allocation.total_people_benefitted)}</td>
                 <td>
                     <button class="btn btn-sm btn-info" onclick="viewAllocationDetails(${allocation.allocation_id})">
-                        <i class="bi bi-eye"></i> View Details
+                        <i class="bi bi-eye"></i> Xem Chi Tiết
                     </button>
                 </td>
             </tr>
@@ -59,11 +59,11 @@ async function viewAllocationDetails(allocationId) {
         details.decisions.forEach(decision => {
             let statusBadge;
             if (decision.allocation_percentage >= 0.99) {
-                statusBadge = '<span class="badge bg-success">FULL</span>';
+                statusBadge = '<span class="badge bg-success">TOÀN BỘ</span>';
             } else if (decision.allocation_percentage > 0) {
-                statusBadge = '<span class="badge bg-warning">PARTIAL</span>';
+                statusBadge = '<span class="badge bg-warning">MỘT PHẦN</span>';
             } else {
-                statusBadge = '<span class="badge bg-danger">REJECTED</span>';
+                statusBadge = '<span class="badge bg-danger">TỪ CHỐI</span>';
             }
             
             const row = `
@@ -86,7 +86,7 @@ async function viewAllocationDetails(allocationId) {
         const modal = new bootstrap.Modal(document.getElementById('allocationDetailsModal'));
         modal.show();
     } catch (error) {
-        showError('Failed to load allocation details: ' + error.message);
+        showError('Không thể tải chi tiết phân bổ: ' + error.message);
     }
 }
 

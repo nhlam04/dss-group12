@@ -443,8 +443,8 @@ if __name__ == '__main__':
     print("Hệ thống Hỗ trợ Quyết định cho Quỹ Từ thiện")
     print("=" * 80)
     print("\nServer starting...")
-    print("Access the application at: http://localhost:5000")
+    print("Access the application at: http://localhost:5001")
     print("\nPress CTRL+C to stop the server")
     print("=" * 80)
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

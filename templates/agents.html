@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Charity Agents - Charity Fund DSS{% endblock %}
+{% block title %}Tổ Chức Từ Thiện - Hệ thống Quỹ Từ thiện{% endblock %}
 
 {% block content %}
-<h1 class="mb-4"><i class="bi bi-people"></i> Charity Agents</h1>
+<h1 class="mb-4"><i class="bi bi-people"></i> Tổ Chức Từ Thiện</h1>
 
 <div class="row mb-3">
     <div class="col">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAgentModal">
-            <i class="bi bi-plus-circle"></i> Add New Agent
+            <i class="bi bi-plus-circle"></i> Thêm Tổ Chức Mới
         </button>
     </div>
 </div>
@@ -19,13 +19,13 @@
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>Agent ID</th>
-                        <th>Name</th>
-                        <th>Success Rate</th>
-                        <th>Transparency</th>
-                        <th>Programs Completed</th>
-                        <th>Programs Succeeded</th>
-                        <th>Actions</th>
+                        <th>Mã Tổ Chức</th>
+                        <th>Tên</th>
+                        <th>Tỷ Lệ Thành Công</th>
+                        <th>Minh Bạch</th>
+                        <th>Chương Trình Hoàn Thành</th>
+                        <th>Chương Trình Thành Công</th>
+                        <th>Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody id="agentsTable"></tbody>
@@ -39,34 +39,34 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New Charity Agent</h5>
+                <h5 class="modal-title">Thêm Tổ Chức Từ Thiện Mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="addAgentForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="agentName" class="form-label">Organization Name</label>
+                        <label for="agentName" class="form-label">Tên Tổ Chức</label>
                         <input type="text" class="form-control" id="agentName" required>
                     </div>
                     <div class="mb-3">
-                        <label for="transparencyScore" class="form-label">Transparency Score (0-1)</label>
+                        <label for="transparencyScore" class="form-label">Điểm Minh Bạch (0-1)</label>
                         <input type="number" class="form-control" id="transparencyScore" step="0.01" min="0" max="1" required>
-                        <div class="form-text">Subjective: Requires human evaluation of reporting quality</div>
+                        <div class="form-text">Chủ quan: Cần đánh giá của con người về chất lượng báo cáo</div>
                     </div>
                     <div class="mb-3">
-                        <label for="totalPrograms" class="form-label">Total Programs Completed</label>
+                        <label for="totalPrograms" class="form-label">Tổng Số Chương Trình Hoàn Thành</label>
                         <input type="number" class="form-control" id="totalPrograms" min="0" value="0" required>
-                        <div class="form-text">Objective: Historical count of all programs</div>
+                        <div class="form-text">Khách quan: Số lượng lịch sử của tất cả chương trình</div>
                     </div>
                     <div class="mb-3">
-                        <label for="programsSucceeded" class="form-label">Programs Succeeded</label>
+                        <label for="programsSucceeded" class="form-label">Chương Trình Thành Công</label>
                         <input type="number" class="form-control" id="programsSucceeded" min="0" value="0" required>
-                        <div class="form-text">Objective: Count of successful programs (success rate auto-calculated)</div>
+                        <div class="form-text">Khách quan: Số lượng chương trình thành công (tỷ lệ thành công tự động tính)</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Agent</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm Tổ Chức</button>
                 </div>
             </form>
         </div>

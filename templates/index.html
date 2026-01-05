@@ -1,45 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Charity Fund DSS{% endblock %}
+{% block title %}Bảng Điều Khiển - Hệ thống Quỹ Từ thiện{% endblock %}
 
 {% block content %}
-<h1 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+<h1 class="mb-4"><i class="bi bi-speedometer2"></i> Bảng Điều Khiển</h1>
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card bg-primary text-white">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-cash-stack"></i> Total Budget</h5>
+                <h5 class="card-title"><i class="bi bi-cash-stack"></i> Tổng Ngân Sách</h5>
                 <h2 id="totalBudget">$0</h2>
-                <small>Available funds</small>
+                <small>Quỹ khả dụng</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card bg-success text-white">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-check-circle"></i> Allocated</h5>
+                <h5 class="card-title"><i class="bi bi-check-circle"></i> Đã Phân Bổ</h5>
                 <h2 id="allocatedBudget">$0</h2>
-                <small>Funds allocated</small>
+                <small>Quỹ đã phân bổ</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-wallet"></i> Remaining</h5>
+                <h5 class="card-title"><i class="bi bi-wallet"></i> Còn Lại</h5>
                 <h2 id="remainingBudget">$0</h2>
-                <small>Funds available</small>
+                <small>Quỹ còn lại</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card bg-warning text-white">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-file-earmark"></i> Pending</h5>
+                <h5 class="card-title"><i class="bi bi-file-earmark"></i> Đang Chờ</h5>
                 <h2 id="pendingRequests">0</h2>
-                <small>Grant requests</small>
+                <small>Yêu cầu tài trợ</small>
             </div>
         </div>
     </div>
@@ -49,7 +49,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title text-muted">Charity Agents</h6>
+                <h6 class="card-title text-muted">Tổ Chức Từ Thiện</h6>
                 <h3 id="totalAgents">0</h3>
             </div>
         </div>
@@ -57,7 +57,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title text-muted">Total Requests</h6>
+                <h6 class="card-title text-muted">Tổng Yêu Cầu</h6>
                 <h3 id="totalRequests">0</h3>
             </div>
         </div>
@@ -65,7 +65,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title text-muted">Funded Programs</h6>
+                <h6 class="card-title text-muted">Chương Trình Đã Tài Trợ</h6>
                 <h3 id="fundedRequests">0</h3>
             </div>
         </div>
@@ -73,7 +73,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title text-muted">Total Allocations</h6>
+                <h6 class="card-title text-muted">Tổng Phân Bổ</h6>
                 <h3 id="totalAllocations">0</h3>
             </div>
         </div>
@@ -85,22 +85,22 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-gear"></i> Fund Configuration</h5>
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Cấu Hình Quỹ</h5>
             </div>
             <div class="card-body">
                 <form id="fundConfigForm">
                     <div class="mb-3">
-                        <label for="addFundsInput" class="form-label">Add Funds ($)</label>
+                        <label for="addFundsInput" class="form-label">Thêm Quỹ ($)</label>
                         <input type="number" class="form-control" id="addFundsInput" step="0.01" min="0" required>
-                        <small class="form-text text-muted">Enter amount to add to existing budget</small>
+                        <small class="form-text text-muted">Nhập số tiền để thêm vào ngân sách hiện có</small>
                     </div>
                     <div class="mb-3">
-                        <label for="minAllocationPct" class="form-label">Minimum Allocation Percentage</label>
+                        <label for="minAllocationPct" class="form-label">Tỷ Lệ Phân Bổ Tối Thiểu</label>
                         <input type="number" class="form-control" id="minAllocationPct" step="0.01" min="0" max="1" required>
-                        <small class="form-text text-muted">Enter value between 0 and 1 (e.g., 0.5 for 50%)</small>
+                        <small class="form-text text-muted">Nhập giá trị từ 0 đến 1 (ví dụ: 0.5 cho 50%)</small>
                     </div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Add Funds
+                        <i class="bi bi-plus-circle"></i> Thêm Quỹ
                     </button>
                 </form>
             </div>
@@ -110,21 +110,21 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Actions</h5>
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Thao Tác Nhanh</h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="/agents" class="btn btn-outline-primary btn-lg">
-                        <i class="bi bi-people"></i> Manage Charity Agents
+                        <i class="bi bi-people"></i> Quản Lý Tổ Chức Từ Thiện
                     </a>
                     <a href="/requests" class="btn btn-outline-success btn-lg">
-                        <i class="bi bi-file-earmark-plus"></i> Add Grant Request
+                        <i class="bi bi-file-earmark-plus"></i> Thêm Yêu Cầu Tài Trợ
                     </a>
                     <a href="/allocate" class="btn btn-outline-warning btn-lg">
-                        <i class="bi bi-pie-chart"></i> Run Allocation Analysis
+                        <i class="bi bi-pie-chart"></i> Chạy Phân Tích Phân Bổ
                     </a>
                     <a href="/history" class="btn btn-outline-info btn-lg">
-                        <i class="bi bi-clock-history"></i> View Allocation History
+                        <i class="bi bi-clock-history"></i> Xem Lịch Sử Phân Bổ
                     </a>
                 </div>
             </div>
@@ -154,7 +154,7 @@ async function loadStats() {
         // Update form - only update min allocation percentage
         document.getElementById('minAllocationPct').value = stats.min_allocation_percentage;
     } catch (error) {
-        showError('Failed to load statistics: ' + error.message);
+        showError('Không thể tải thống kê: ' + error.message);
     }
 }
 
@@ -166,7 +166,7 @@ document.getElementById('fundConfigForm').addEventListener('submit', async (e) =
     const minAllocationPct = parseFloat(document.getElementById('minAllocationPct').value);
     
     if (addFunds <= 0) {
-        showError('Amount to add must be greater than zero');
+        showError('Số tiền thêm phải lớn hơn 0');
         return;
     }
     
@@ -186,7 +186,7 @@ document.getElementById('fundConfigForm').addEventListener('submit', async (e) =
         });
         
         if (response.ok) {
-            showSuccess(`Successfully added $${addFunds.toLocaleString()} to fund`);
+            showSuccess(`Đã thêm thành công $${addFunds.toLocaleString()} vào quỹ`);
             document.getElementById('addFundsInput').value = '';
             loadStats();
         } else {
@@ -194,7 +194,7 @@ document.getElementById('fundConfigForm').addEventListener('submit', async (e) =
             showError(error.error);
         }
     } catch (error) {
-        showError('Failed to update configuration: ' + error.message);
+        showError('Không thể cập nhật cấu hình: ' + error.message);
     }
 });
 

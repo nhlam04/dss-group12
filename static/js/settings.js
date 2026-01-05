@@ -18,7 +18,7 @@ async function loadWeights() {
         
         updateTotalWeight();
     } catch (error) {
-        showError('Failed to load weights: ' + error.message);
+        showError('Không thể tải trọng số: ' + error.message);
     }
 }
 
@@ -63,7 +63,7 @@ document.getElementById('weightsForm').addEventListener('submit', async (e) => {
     // Validate sum
     const total = Object.values(newWeights).reduce((a, b) => a + b, 0);
     if (Math.abs(total - 1.0) > 0.01) {
-        showError('Weights must sum to 1.0');
+        showError('Tổng trọng số phải bằng 1.0');
         return;
     }
     
@@ -75,14 +75,14 @@ document.getElementById('weightsForm').addEventListener('submit', async (e) => {
         });
         
         if (response.ok) {
-            showSuccess('Weights updated successfully');
+            showSuccess('Đã cập nhật trọng số thành công');
             loadWeights();
         } else {
             const error = await response.json();
             showError(error.error);
         }
     } catch (error) {
-        showError('Failed to update weights: ' + error.message);
+        showError('Không thể cập nhật trọng số: ' + error.message);
     }
 });
 
